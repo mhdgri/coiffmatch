@@ -211,7 +211,7 @@
   var params = new URLSearchParams(location.search);
   var S = {
     me: { loggedIn: !!C.loggedIn, favs: [] },
-    hair: C.hair[params.get('hair')] ? params.get('hair') : 'boucles',
+    hair: C.hair[params.get('hair')] ? params.get('hair') : (params.get('hair') === 'tous' ? '' : 'boucles'),
     service: C.services[params.get('service')] ? params.get('service') : 'coupe',
     where: ['salon', 'domicile'].indexOf(params.get('where')) !== -1 ? params.get('where') : 'all',
     skill: C.skills[params.get('savoir')] ? params.get('savoir') : '', staff: null, length: '', bookPhotos: [],
@@ -221,7 +221,7 @@
     space: null, draft: null, searchSeq: 0,
     hairProfile: loadLocalHair(), diagStep: 0, diagDraft: null, revFilter: 'all', preset: null
   };
-  if (!C.hair[params.get('hair')] && S.hairProfile && C.hair[S.hairProfile.type]) S.hair = S.hairProfile.type;
+  if (!C.hair[params.get('hair')] && params.get('hair') !== 'tous' && S.hairProfile && C.hair[S.hairProfile.type]) S.hair = S.hairProfile.type;
   function loadLocalHair() { try { return JSON.parse(localStorage.getItem('cm_hair') || 'null') || {}; } catch (e) { return {}; } }
   function saveLocalHair(p) { try { localStorage.setItem('cm_hair', JSON.stringify(p)); } catch (e) {} }
   function hairText(p) {
@@ -373,7 +373,7 @@
   /* ================= Navigation ================= */
   function route(q) {
     var pro = parseInt(q.get('pro'), 10), tab = q.get('tab');
-    if (q.get('hair') && C.hair[q.get('hair')] && q.get('hair') !== S.hair) { S.hair = q.get('hair'); S.lastList = null; renderHair(); }
+    var qh = q.get('hair') === 'tous' ? '' : q.get('hair'); if (qh !== null && (qh === '' || C.hair[qh]) && qh !== S.hair) { S.hair = qh; S.lastList = null; renderHair(); }
     if (q.get('diag')) { S.diagReturn = current(); S.diagDraft = null; show('diag'); }
     else if (pro) { if (S.pro && S.pro.id === pro) show('profile'); else openPro(pro, q.get('presta') ? { pick: q.get('presta') } : null); }
     else if (tab === 'mine' || tab === 'inbox') show(tab);
@@ -384,11 +384,15 @@
   /* L'adresse suit l'écran affiché : le bouton « retour » du navigateur et les liens partagés marchent sans recharger la page. */
   function urlFor(v) {
     var base = location.pathname;
-    if (v === 'search') { var q = []; if (S.hair) q.push('hair=' + encodeURIComponent(S.hair)); if (S.skill) q.push('savoir=' + encodeURIComponent(S.skill)); if (S.city) q.push('ville=' + encodeURIComponent(S.city)); return base + (q.length ? '?' + q.join('&') : ''); }
+    if (v === 'search') { var q = []; q.push('hair=' + encodeURIComponent(S.hair || 'tous')); if (S.skill) q.push('savoir=' + encodeURIComponent(S.skill)); if (S.city) q.push('ville=' + encodeURIComponent(S.city)); return base + (q.length ? '?' + q.join('&') : ''); }
     if (v === 'profile' && S.proId) return base + '?pro=' + S.proId;
     if (v === 'mine' || v === 'inbox') return base + '?tab=' + v;
     if (v === 'diag') return base + '?diag=1';
     return null;
+  }
+  function keepUrl() {
+    if (PRO || !window.history || !history.replaceState) return;
+    var u = urlFor('search'); if (u) history.replaceState(history.state, '', u);
   }
   function syncUrl(v) {
     if (PRO || S.fromPop || !window.history || !history.pushState) return;
@@ -476,12 +480,17 @@
   $('asList').onclick = function () { setView(false); };
   $('asMap').onclick = function () { setView(true); };
 
+  function resetFilters() {
+    S.hair = ''; S.service = ''; S.where = 'all'; S.city = ''; S.skill = ''; S.maxprice = ''; S.avail = false; S.onlyVerified = false; S.onlyFav = false;
+    syncFilters(); renderHair(); loadResults(); keepUrl();
+  }
   function renderDiagBar() {
     var bar = $('diagbar'); if (!bar) return;
     var t = hairText(S.hairProfile);
     bar.innerHTML = t
-      ? '<span><strong>Vos cheveux :</strong> ' + esc(t) + '</span><button type="button" class="link" data-go="diag">Modifier</button>'
+      ? '<span><strong>Vos cheveux :</strong> ' + esc(t) + '</span><button type="button" class="link" data-go="diag">Modifier</button> <button type="button" class="link" id="cm-clearhair">Voir tous les coiffeurs</button>'
       : '<span>Pas sûre de votre type ?</span><button type="button" class="link" data-go="diag">Faire le diagnostic</button>';
+    var ch = $('clearhair'); if (ch) ch.onclick = resetFilters;
   }
   var DIAG_KEYS = ['type', 'length', 'thick', 'state', 'porosity', 'goal'];
   function renderDiag() {
@@ -512,10 +521,10 @@
   }
 
   function renderHair() {
-    $('hair').innerHTML = HAIR.map(function (h) {
+    $('hair').innerHTML = '<button type="button" class="chip" role="radio" aria-checked="' + (S.hair === '') + '" data-h="">Tous</button>' + HAIR.map(function (h) {
       return '<button type="button" class="chip" role="radio" aria-checked="' + (S.hair === h[0]) + '" data-h="' + h[0] + '">' + esc(h[1]) + '</button>';
     }).join('');
-    $('hair').querySelectorAll('button').forEach(function (b) { b.onclick = function () { S.hair = b.dataset.h; renderHair(); loadResults(); }; });
+    $('hair').querySelectorAll('button').forEach(function (b) { b.onclick = function () { S.hair = b.dataset.h; renderHair(); loadResults(); keepUrl(); }; });
   }
 
   function loadResults() {
@@ -578,11 +587,11 @@
   function renderResults(list) {
     var ul = $('results');
     var rt = root.querySelector('.results__title');
-    if (rt) rt.textContent = 'Coiffeurs pour cheveux ' + hairLabel(S.hair).toLowerCase();
+    if (rt) rt.textContent = S.hair ? 'Coiffeurs pour cheveux ' + hairLabel(S.hair).toLowerCase() : 'Coiffeurs, tous types de cheveux';
     filterCount();
     S.lastList = list;
     if (S.asMap) setTimeout(drawMap, 0);
-    $('count').innerHTML = list.length ? '<strong>' + plural(list.length, 'coiffeur', 'coiffeurs') + '</strong> pour les cheveux ' + esc(hairLabel(S.hair).toLowerCase()) + ' · ' + esc(svcLabel(S.service).toLowerCase()) : '';
+    $('count').innerHTML = list.length ? '<strong>' + plural(list.length, 'coiffeur', 'coiffeurs') + '</strong> ' + (S.hair ? 'pour les cheveux ' + esc(hairLabel(S.hair).toLowerCase()) : 'tous types de cheveux') + ' · ' + esc(svcLabel(S.service).toLowerCase()) : '';
     if (!list.length) {
       ul.innerHTML = '<li class="empty">Aucun coiffeur ne correspond à tous ces critères.<div class="empty__acts"></div></li>';
       var acts = ul.querySelector('.empty__acts');
@@ -591,7 +600,8 @@
       if (S.city) act('Toutes les villes', function () { S.city = ''; });
       if (S.where !== 'all') act('Salon ou domicile', function () { S.where = 'all'; });
       if (S.avail || S.maxprice || S.onlyVerified || S.onlyFav) act('Retirer les filtres', function () { S.avail = false; S.maxprice = ''; S.onlyVerified = false; S.onlyFav = false; });
-      act('Toutes les prestations', function () { S.service = ''; });
+      if (S.service) act('Toutes les prestations', function () { S.service = ''; });
+      if (S.hair) act('Tous types de cheveux', function () { S.hair = ''; renderHair(); keepUrl(); });
       return;
     }
     ul.innerHTML = '';
