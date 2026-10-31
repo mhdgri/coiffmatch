@@ -1,54 +1,85 @@
 # Coiff'Match
 
-Le coiffeur qui connaît vos cheveux : on choisit son type de cheveux, on compare les coiffeurs qui le maîtrisent, et on réserve.
+Le coiffeur qui connaît vos cheveux. On choisit son type de cheveux (raides, ondulés, bouclés, frisés, crépus), on compare les coiffeurs qui le maîtrisent, puis on réserve.
 
-Le site est fait avec **React** (Vite). Les données sont dans **Supabase** et il est mis en ligne sur **Vercel**.
+Le site reprend à l'identique le site WordPress d'origine : mêmes pages, même design, mêmes fonctions.
 
-## Lancer le site sur ton ordinateur
+- **React (Vite)** affiche les pages.
+- **Supabase** garde les comptes et les données.
+- **Vercel** met le site en ligne.
+
+## Ce que fait le site
+
+**Clientes**
+- Recherche par type de cheveux, prestation, ville, savoir-faire, prix et « disponible demain ». Les résultats s'affichent en liste ou sur une carte.
+- Favoris, et fiche cheveux en 6 questions.
+- Réservation avec choix de la coiffeuse, prix selon la longueur et photos des cheveux.
+- Liste d'attente si une journée est complète.
+- « Mes rendez-vous » : annulation, ajout à l'agenda, avis avec photo.
+- Messagerie avec le coiffeur, signalements, parrainage, rappels d'entretien, suppression du compte.
+
+**Coiffeurs**
+- Profil complet : prestations, suppléments selon la longueur, horaires, jours de fermeture, équipe, photos « avant / après ».
+- Demandes à accepter ou refuser, agenda de la semaine, fichier clientes avec notes privées.
+- Réponses aux avis, fréquentation du profil, agenda à synchroniser avec le téléphone, lien à partager.
+
+**Équipe**
+- Validation des profils et badge « Diplôme vérifié ».
+- Signalements, rendez-vous, membres, statistiques et recherches sans résultat.
+
+**Pages publiques**
+- Accueil, une page par coiffeur, une page par type de cheveux et par ville.
+- Guide des cheveux, contact, mentions légales, CGU, confidentialité.
+- Application installable sur téléphone.
+
+## Mettre en ligne
+
+### 1. Supabase
+
+1. Ouvrez **SQL Editor** puis **New query**. Collez tout `supabase/schema.sql`, puis cliquez sur **Run**.
+   ⚠️ Ce script remplace les tables de la première version.
+2. Faites de même avec `supabase/exemples.sql` : il ajoute 4 coiffeurs d'exemple et leurs avis, tous signalés comme exemples.
+3. Ouvrez **Authentication** puis **Sign In / Providers** puis **Email**. Décochez **Confirm email**, puis cliquez sur **Save**.
+4. Ouvrez **Authentication** puis **URL Configuration**. Dans **Site URL**, mettez l'adresse du site, par exemple `https://coiffmatch.vercel.app`. Dans **Redirect URLs**, ajoutez `https://coiffmatch.vercel.app/**`.
+5. Pour devenir membre de l'équipe : créez votre compte sur le site, puis lancez cette commande dans le SQL Editor :
+   ```sql
+   update public.profiles set role = 'admin' where email = 'votre@email.fr';
+   ```
+
+### 2. Vercel
+
+Ajoutez deux variables d'environnement :
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY` (la clé « publishable » ou « anon »)
+
+Le site se redéploie tout seul à chaque envoi sur GitHub.
+
+### 3. E-mails (facultatif)
+
+Le site enregistre chaque e-mail à envoyer dans la table `email_outbox` : confirmation, rappel, nouveau message, créneau libéré… Pour qu'ils partent vraiment :
+
+1. Créez un compte gratuit sur https://resend.com et une clé API.
+2. Dans Supabase, ouvrez **Edge Functions**, créez une fonction `send-emails` et collez-y `supabase/functions/send-emails/index.ts`.
+3. Dans **Edge Functions** puis **Secrets**, ajoutez :
+   - `RESEND_API_KEY`
+   - `MAIL_FROM` (par exemple `Coiff'Match <bonjour@votre-domaine.fr>`)
+4. Ouvrez **Database** puis **Webhooks**, puis **Create a new hook**. Choisissez la table `email_outbox`, l'événement **Insert**, et le type **Supabase Edge Function** `send-emails`.
+
+## Avant d'ouvrir au public
+
+Supprimez les profils d'exemple :
+
+```sql
+delete from public.pros where is_example;
+```
+
+Complétez aussi les mentions légales et la politique de confidentialité, aux endroits marqués « [à compléter] ».
+
+## Lancer sur son ordinateur
+
+Créez un fichier `.env` qui contient les deux variables ci-dessus, puis :
 
 ```bash
 npm install
 npm run dev
-```
-
-Ouvre ensuite http://localhost:5173.
-
-Sans fichier `.env`, le site tourne en **mode démo** : les comptes et les réservations restent dans ton navigateur. Pratique pour essayer sans rien configurer.
-
-## Brancher Supabase
-
-1. Sur https://supabase.com, crée un projet gratuit. Choisis la région Europe (Paris ou Francfort) et note bien le mot de passe de la base.
-2. Va dans **SQL Editor → New query**, colle tout le contenu de `supabase/schema.sql`, puis clique sur **Run**.
-3. *(Facultatif, pour la démo)* Dans une nouvelle requête, colle `supabase/exemples-avis.sql` et clique sur **Run**. Cela ajoute des avis d'exemple, signalés comme tels sur le site.
-4. Va dans **Authentication → Sign In / Providers → Email** et désactive **Confirm email**. Sinon, chaque compte de test doit cliquer sur un lien reçu par e-mail.
-5. Va dans **Project Settings → API**. Copie la **Project URL** et la clé **anon public**.
-6. Copie `.env.example` en `.env` et colle-y ces deux valeurs.
-
-## Mettre en ligne sur Vercel
-
-1. Envoie le code sur GitHub.
-2. Sur https://vercel.com, clique sur **Add New → Project** et choisis le dépôt. Vercel reconnaît Vite tout seul.
-3. Dans **Environment Variables**, ajoute `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY`, avec les mêmes valeurs que dans `.env`.
-4. Clique sur **Deploy**. Le site est en ligne sur une adresse du type `coiffmatch.vercel.app`.
-5. Dans Supabase, va dans **Authentication → URL Configuration** et mets cette adresse dans **Site URL**.
-
-## Ce que fait le site
-
-- **Clientes** : recherche par type de cheveux, prestation, salon ou domicile, ville et savoir-faire. Elles voient le profil du coiffeur (prestations, prix selon la longueur, équipe, réalisations, avis) et peuvent faire leur fiche cheveux en 6 questions. Elles réservent en 5 étapes, annulent jusqu'à 24 h avant, et donnent leur avis après le rendez-vous.
-- **Coiffeurs** : ils créent leur profil, avec horaires, jours de fermeture, équipe et photos, puis acceptent ou refusent les demandes et voient la fiche cheveux de la cliente.
-- **Sécurité** (règles Supabase dans `schema.sql`) :
-  - Une cliente ne voit que ses propres rendez-vous, un coiffeur que ceux de son salon.
-  - Les réservations passent par une fonction qui vérifie le créneau, les horaires et les doubles réservations.
-  - Seule une cliente qui a eu un rendez-vous peut laisser un avis, et seulement après ce rendez-vous.
-  - Le badge « Diplôme vérifié » ne peut pas être ajouté par le coiffeur lui-même.
-
-## Profils d'exemple
-
-Le script crée 4 coiffeurs d'exemple, marqués « (exemple) ». Leurs réservations sont confirmées automatiquement, puisque personne ne gère ces comptes.
-
-Avant une vraie ouverture au public, il faut les supprimer en lançant ces deux lignes dans le SQL Editor :
-
-```sql
-delete from public.reviews where is_example;
-delete from public.pros where is_example;
 ```
