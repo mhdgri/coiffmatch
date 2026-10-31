@@ -872,8 +872,8 @@
     $('r-depositRow').hidden = !demo; $('r-restRow').hidden = !demo; $('r-onsiteRow').hidden = demo;
     $('r-deposit').textContent = C.deposit + ' €';
     $('r-rest').textContent = Math.max(0, price + travel - C.deposit) + ' €';
-    $('b-note').textContent = (p.example ? 'Profil d\'exemple : le rendez-vous est confirmé automatiquement. ' : 'Le coiffeur confirme votre demande, vous recevez un e-mail. ') +
-      'Rappel par e-mail la veille. Annulation gratuite jusqu\'à ' + C.cancelHours + ' h avant.' +
+    $('b-note').textContent = (p.example ? 'Profil d\'exemple : le rendez-vous est confirmé automatiquement. ' : (C.emails ? 'Le coiffeur confirme votre demande, vous recevez un e-mail. ' : 'Le coiffeur confirme votre demande : suivez-la dans « Mes rendez-vous ». ')) +
+      (C.emails ? 'Rappel par e-mail la veille. ' : '') + 'Annulation gratuite jusqu\'à ' + C.cancelHours + ' h avant.' +
       (demo ? ' Démonstration : l\'acompte n\'est pas débité.' : ' Rien n\'est payé en ligne.');
   }
   $('bookForm').addEventListener('submit', function (e) {
@@ -895,7 +895,7 @@
         var ok = b.status === 'confirmed';
         $('d-title').textContent = ok ? 'C\'est réservé !' : 'Demande envoyée';
         $('d-text').innerHTML = esc(name) + ', rendez-vous avec ' + esc(p.name) + (b.staffName ? ' (' + esc(b.staffName) + ')' : '') + ' <strong>' + esc(b.dateLabel) + ' à ' + esc(b.hour) + '</strong>.<br>' + (p.mode === 'domicile' ? 'À votre domicile' : esc(p.address || p.place));
-        $('d-sub').textContent = ok ? 'Vous recevez la confirmation par e-mail, puis un rappel la veille.' : 'Le coiffeur a ' + (C.expireHours || 24) + ' h pour confirmer : vous recevrez un e-mail et verrez le statut dans « Mes RDV ».';
+        $('d-sub').textContent = ok ? (C.emails ? 'Vous recevez la confirmation par e-mail, puis un rappel la veille.' : 'Retrouvez-le à tout moment dans « Mes rendez-vous ».') : 'Le coiffeur a ' + (C.expireHours || 24) + ' h pour confirmer : ' + (C.emails ? 'vous recevrez un e-mail et verrez' : 'vous verrez') + ' le statut dans « Mes RDV ».';
         $('d-cal').innerHTML = calLinks(b);
         refreshMe();
         show('done');
@@ -951,7 +951,7 @@
     api('waitlist').then(function (r) {
       var wl = $('waitList'); $('waitWrap').hidden = !r.items.length; wl.innerHTML = '';
       r.items.forEach(function (w) {
-        var li = el('<li class="rdv"><strong>' + esc(w.proName) + '</strong><span class="sub">' + esc(w.dateLabel) + ' · ' + (w.notified ? 'Un créneau s\'est libéré : vous avez reçu un e-mail.' : 'Vous serez prévenue par e-mail si un créneau se libère.') + '</span><div class="actions"></div></li>');
+        var li = el('<li class="rdv"><strong>' + esc(w.proName) + '</strong><span class="sub">' + esc(w.dateLabel) + ' · ' + (w.notified ? (C.emails ? 'Un créneau s\'est libéré : vous avez reçu un e-mail.' : 'Un créneau s\'est libéré : réservez vite.') : (C.emails ? 'Vous serez prévenue par e-mail si un créneau se libère.' : 'Revenez voir : un créneau peut se libérer.')) + '</span><div class="actions"></div></li>');
         var a = li.querySelector('.actions');
         var go = el('<button type="button" class="link">Voir les créneaux</button>'); go.onclick = function () { openPro(w.proId); }; a.appendChild(go);
         var rm = el('<button type="button" class="link danger">Retirer</button>');
@@ -1094,7 +1094,7 @@
   function startList(d, p) {
     var n = (p.photos || []).length;
     var items = [
-      [p.status === 'publish', 'Profil validé et en ligne', p.status === 'publish' ? '' : 'L\'équipe le relit, vous recevrez un e-mail.'],
+      [p.status === 'publish', 'Profil validé et en ligne', p.status === 'publish' ? '' : (C.emails ? 'L\'équipe le relit, vous recevrez un e-mail.' : 'L\'équipe le relit, il apparaîtra ici dès qu\'il sera en ligne.')],
       [n >= 3, 'Au moins 3 photos de vos réalisations', n + ' sur 3 · les clientes choisissent d\'abord sur les photos', 'proedit'],
       [!!p.verified, 'Badge « Diplôme vérifié »', p.diploma ? 'Diplôme déclaré, en attente de contrôle.' : 'Indiquez votre diplôme dans « Mon profil ».', 'proedit'],
       [(d.audience && d.audience.views > 0), 'Votre lien partagé', 'Mettez-le dans votre bio Instagram ou WhatsApp.']
@@ -1125,7 +1125,7 @@
   function renderPro() {
     var d = S.space, p = d.profile, body = $('pro-body');
     var status = !p ? '' : p.status === 'publish' ? '<p class="msg ok">Votre profil est en ligne et apparaît dans la recherche.</p>'
-      : p.status === 'pending' ? '<p class="msg">Votre profil est en attente de validation par l\'équipe. Vous recevrez un e-mail dès qu\'il sera en ligne.</p>'
+      : p.status === 'pending' ? '<p class="msg">Votre profil est en attente de validation par l\'équipe. ' + (C.emails ? 'Vous recevrez un e-mail dès qu\'il sera en ligne.' : 'Il sera visible dès sa validation.') + '</p>'
       : (p.refused ? '<p class="msg"><strong>L\'équipe vous demande quelques corrections :</strong> ' + esc(p.refused) + '<br>Modifiez votre profil dans « Mon profil » puis enregistrez-le : il nous sera renvoyé.</p>' : '<p class="msg">Votre profil est hors ligne. Enregistrez-le pour le soumettre à nouveau.</p>');
     body.innerHTML = status +
       (!p ? '<div class="empty"><p style="margin-bottom:12px">Bienvenue ! Commencez par créer votre profil : il sera vérifié par l\'équipe avant d\'apparaître dans la recherche.</p><button type="button" class="cta" data-tab="proedit">Créer mon profil</button></div>' : '') +
@@ -1145,7 +1145,7 @@
           '<a class="ghost" id="cm-preview" target="_blank" rel="noopener">Voir mon profil comme une cliente</a></div>' : '') +
         (p.ical ? '<div class="stack icalbox"><h2>Mon agenda sur mon téléphone</h2><p class="sub">Vos demandes et vos rendez-vous s\'ajoutent tout seuls à votre agenda habituel, et se mettent à jour.</p>' +
           '<div class="row wrap"><a class="ghost" id="cm-icalGoogle" target="_blank" rel="noopener">Ajouter à Google Agenda</a><a class="ghost" id="cm-icalApple">iPhone ou Outlook</a><button type="button" class="link" id="cm-icalCopy">Copier le lien</button></div>' +
-          '<p class="sub small">Google relit l\'agenda toutes les quelques heures : pour une nouvelle demande, l\'e-mail reste le plus rapide. Ce lien est personnel, ne le partagez pas. <button type="button" class="link small" id="cm-icalReset">Changer de lien</button></p></div>' : '') +
+          '<p class="sub small">Google relit l\'agenda toutes les quelques heures : pour une nouvelle demande, ' + (C.emails ? 'l\'e-mail reste le plus rapide.' : 'votre tableau de bord reste le plus rapide.') + ' Ce lien est personnel, ne le partagez pas. <button type="button" class="link small" id="cm-icalReset">Changer de lien</button></p></div>' : '') +
         '<div class="cm-install" data-cm-install hidden></div>' : '');
 
     if (p) {

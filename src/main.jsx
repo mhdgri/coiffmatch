@@ -8,6 +8,7 @@ import { HAIR, SERVICES, SKILLS, LENGTHS, DIPLOMAS, ALL_HOURS, HAIR_QUESTIONS, e
 import * as P from './pages';
 
 const CSS = ['/cm/block-library.css', '/cm/wp-base.css', '/cm/fonts/fonts.css'];
+const FIXES = '/cm/fixes.css';
 const pathname = location.pathname.replace(/\/+$/, '') + '/';
 const params = new URLSearchParams(location.search);
 const go = (url) => {
@@ -44,8 +45,9 @@ function meta(name, content, prop = false) {
 }
 
 /** Configuration lue par app.js (même contenu que wp_localize_script). */
-function appConfig(mode, me) {
+function appConfig(mode, me, s = {}) {
   return {
+    emails: !!s.emails,
     mode, proUrl: `${location.origin}/espace-coiffeur/`, api: `${location.origin}/__cm/`, nonce: '', loggedIn: me ? '1' : '',
     accountUrl: `${location.origin}/mon-compte/`, appUrl: `${location.origin}/trouver-un-coiffeur/`, hair: HAIR, hairQuestions: HAIR_QUESTIONS,
     services: SERVICES, diplomas: DIPLOMAS, skills: SKILLS, lengths: LENGTHS, allHours: ALL_HOURS, payment: 'onsite', deposit: '10',
@@ -82,12 +84,12 @@ async function resolve(ctx) {
   }
   if (pathname === '/comment-ca-marche/') return go('/#comment-ca-marche');
   if (pathname === '/trouver-un-coiffeur/') {
-    return page('wp-singular page-template page-template-template-app page-template-template-app-php page' + loggedClass, P.appShell('client'), "Trouver un coiffeur – Coiff'Match", { config: appConfig('client', ctx.user), scripts: ['/cm/lightbox.js', '/cm/app.js'], desc: 'Trouvez un coiffeur qui maîtrise votre type de cheveux (raides, ondulés, bouclés, frisés, crépus), au salon ou à domicile, et réservez en ligne.' });
+    return page('wp-singular page-template page-template-template-app page-template-template-app-php page' + loggedClass, P.appShell('client'), "Trouver un coiffeur – Coiff'Match", { config: appConfig('client', ctx.user, s), scripts: ['/cm/lightbox.js', '/cm/app.js'], desc: 'Trouvez un coiffeur qui maîtrise votre type de cheveux (raides, ondulés, bouclés, frisés, crépus), au salon ou à domicile, et réservez en ligne.' });
   }
   if (pathname === '/espace-coiffeur/') {
     if (!ctx.user) return go('/connexion/?espace=coiffeur' + (params.get('tab') ? '&redirect=' + encodeURIComponent('/espace-coiffeur/?tab=' + params.get('tab')) : ''));
     if (!['coiffeur', 'admin'].includes(ctx.profile.role)) return page('wp-singular page-template-default page' + loggedClass, P.clientInProSpace(), "Espace coiffeur – Coiff'Match");
-    return page('wp-singular page-template page-template-template-app page-template-template-app-php page' + loggedClass, P.appShell('pro'), "Espace coiffeur – Coiff'Match", { config: appConfig('pro', ctx.user), scripts: ['/cm/lightbox.js', '/cm/app.js'] });
+    return page('wp-singular page-template page-template-template-app page-template-template-app-php page' + loggedClass, P.appShell('pro'), "Espace coiffeur – Coiff'Match", { config: appConfig('pro', ctx.user, s), scripts: ['/cm/lightbox.js', '/cm/app.js'] });
   }
   if (pathname === '/connexion/' || (pathname === '/mon-compte/' && !ctx.user)) {
     const type = params.get('espace') === 'coiffeur' ? 'coiffeur' : 'client';
@@ -323,7 +325,7 @@ async function boot() {
     console.error(e);
     r = { bodyClass: 'error404', html: `<header class="band"><div class="wrap band__inner"><h1 class="band__title">Un souci technique</h1><p class="band__lead">${esc(e.message || 'Réessayez dans un instant.')}</p></div></header>`, title: "Coiff'Match", scripts: [] };
   }
-  await css([...CSS, ...(r.app ? ['/cm/app.css'] : []), '/cm/theme.css']);
+  await css([...CSS, ...(r.app ? ['/cm/app.css'] : []), '/cm/theme.css', FIXES]);
   document.body.className = r.bodyClass;
   document.title = r.title || "Coiff'Match";
   meta('description', r.desc);

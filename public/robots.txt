@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /mon-compte/
+Disallow: /espace-coiffeur/
+Disallow: /equipe/
+Disallow: /connexion/
+Disallow: /mot-de-passe/
+Disallow: /api/

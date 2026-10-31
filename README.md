@@ -64,6 +64,12 @@ Le site enregistre chaque e-mail à envoyer dans la table `email_outbox` : confi
    - `RESEND_API_KEY`
    - `MAIL_FROM` (par exemple `Coiff'Match <bonjour@votre-domaine.fr>`)
 4. Ouvrez **Database** puis **Webhooks**, puis **Create a new hook**. Choisissez la table `email_outbox`, l'événement **Insert**, et le type **Supabase Edge Function** `send-emails`.
+5. Prévenez le site que les e-mails partent, pour qu'il les annonce aux clientes :
+   ```sql
+   update public.settings set emails = true;
+   ```
+
+Tant que cette étape n'est pas faite, le site ne promet aucun e-mail : il renvoie vers « Mes rendez-vous » et l'espace coiffeur.
 
 ## Avant d'ouvrir au public
 
@@ -73,7 +79,7 @@ Supprimez les profils d'exemple :
 delete from public.pros where is_example;
 ```
 
-Complétez aussi les mentions légales et la politique de confidentialité, aux endroits marqués « [à compléter] ».
+Complétez aussi l'éditeur du site (nom, adresse, e-mail, SIRET si vous en avez un) dans `src/static/legal.html` et `src/static/privacy.html`, aux endroits marqués « [à compléter] ».
 
 ## Lancer sur son ordinateur
 

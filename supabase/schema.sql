@@ -27,6 +27,7 @@ create table public.settings (
   cancel_hours int  not null default 24,
   booking_days int  not null default 14,
   ref_reward   text not null default '',
+  emails       boolean not null default false, -- passer à true une fois l'envoi des e-mails branché (voir README)
   editor_name  text not null default 'Mohamed Guerroui',
   editor_email text not null default 'contact@coiffmatch.fr',
   editor_city  text not null default 'Guyancourt (78)',
@@ -445,7 +446,9 @@ begin
   if v_id is not null then update public.waitlist set notified = false where id = v_id;
   else insert into public.waitlist (pro_id, client_id, slot_date, presta_k) values (p_pro, auth.uid(), p_date, left(coalesce(p_presta, ''), 10));
   end if;
-  return 'C''est noté : vous recevrez un e-mail si un créneau se libère le ' || public.cm_date_label(p_date) || '.';
+  return case when (select emails from public.settings where id = 1)
+    then 'C''est noté : vous recevrez un e-mail si un créneau se libère le ' || public.cm_date_label(p_date) || '.'
+    else 'C''est noté : ce jour apparaît dans « Mes rendez-vous ». Revenez voir si un créneau se libère le ' || public.cm_date_label(p_date) || '.' end;
 end $$;
 
 create or replace function public.cm_waitlist_remove(p_id bigint) returns void
@@ -923,6 +926,7 @@ begin
     ref_reward = left(coalesce(p ->> 'ref_reward', ref_reward), 200),
     cancel_hours = greatest(0, least(168, coalesce((p ->> 'cancel_hours')::int, cancel_hours))),
     booking_days = greatest(1, least(60, coalesce((p ->> 'booking_days')::int, booking_days))),
+    emails = coalesce((p ->> 'emails')::boolean, emails),
     updated_at = now() where id = 1;
 end $$;
 

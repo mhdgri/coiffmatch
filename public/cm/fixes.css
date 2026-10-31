@@ -1,0 +1,5 @@
+/* Petites corrections par rapport au site d'origine. */
+/* Tableau de la politique de confidentialité : défile dans son cadre sur téléphone au lieu d'élargir la page. */
+.cm-legal__table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* Pages légales sur téléphone : la colonne ne doit pas s’élargir à cause du tableau. */
+@media (max-width: 860px) { .legal2 { grid-template-columns: minmax(0, 1fr); } }
