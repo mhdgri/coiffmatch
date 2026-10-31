@@ -978,6 +978,8 @@ begin
                select 1 from public.bookings b join public.pros p on p.id = b.pro_id
                where p.owner = auth.uid() and b.photos @> jsonb_build_array(jsonb_build_object(''path'', name)))))';
   end if;
+exception when others then
+  raise notice 'Stockage des photos : à configurer dans Storage (%).', sqlerrm;
 end $$;
 
 -- ─────────────────────────────────────────────
