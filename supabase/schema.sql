@@ -88,7 +88,7 @@ create index pros_owner_idx on public.pros (owner);
 -- Données privées du coiffeur (lien d'agenda, fréquentation du profil).
 create table public.pro_private (
   pro_id     bigint primary key references public.pros (id) on delete cascade,
-  ical_token text not null default encode(gen_random_bytes(16), 'hex'),
+  ical_token text not null default replace(gen_random_uuid()::text, '-', '') || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8),
   views      jsonb not null default '{}'::jsonb
 );
 
@@ -260,7 +260,7 @@ declare v_ref uuid; v_code text;
 begin
   select id into v_ref from public.profiles where ref_code = upper(coalesce(new.raw_user_meta_data ->> 'ref', ''));
   loop
-    v_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8));
+    v_code := upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8));
     exit when not exists (select 1 from public.profiles where ref_code = v_code);
   end loop;
   insert into public.profiles (id, email, first_name, role, ref_code, referred_by)
@@ -825,7 +825,7 @@ end $$;
 
 create or replace function public.cm_ical_reset() returns text
 language plpgsql security definer set search_path = public as $$
-declare v_pro bigint; v_t text := encode(gen_random_bytes(16), 'hex');
+declare v_pro bigint; v_t text := replace(gen_random_uuid()::text, '-', '') || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8);
 begin
   select id into v_pro from public.pros where owner = auth.uid() and not is_example order by id limit 1;
   if v_pro is null then raise exception 'Créez d''abord votre profil.'; end if;
