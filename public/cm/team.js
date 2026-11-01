@@ -53,7 +53,7 @@
   function skeleton(n) { var h = ''; for (var i = 0; i < n; i++) h += '<li class="sk" aria-hidden="true"><div class="sk__lines"><i></i><i></i><i></i></div></li>'; return '<ul class="list">' + h + '</ul>'; }
 
   /* ---------- Squelette ---------- */
-  var VIEWS = [['dash', 'Tableau de bord'], ['pros', 'Coiffeurs'], ['reports', 'Signalements'], ['bookings', 'Rendez-vous'], ['members', 'Membres']];
+  var VIEWS = [['dash', 'Tableau de bord'], ['pros', 'Coiffeurs'], ['reports', 'Signalements'], ['bookings', 'Rendez-vous'], ['members', 'Membres'], ['contact', 'Messages']];
   root.innerHTML =
     '<header class="top">' +
       '<nav class="tabs" aria-label="Espace équipe">' + VIEWS.map(function (v) {
@@ -80,7 +80,7 @@
     }
     var top = root.getBoundingClientRect().top + window.scrollY - 90;
     if (window.scrollY > top) window.scrollTo(0, Math.max(0, top));
-    ({ dash: loadDash, pros: loadPros, reports: loadReports, bookings: loadBookings, members: loadMembers })[v]();
+    ({ dash: loadDash, pros: loadPros, reports: loadReports, bookings: loadBookings, members: loadMembers, contact: loadContact })[v]();
   }
   root.addEventListener('click', function (e) {
     var b = e.target.closest('[data-tab]');
@@ -286,6 +286,19 @@
   }
 
   /* ---------- Membres ---------- */
+  function loadContact() {
+    var box = $('v-contact');
+    box.innerHTML = '<div class="vhead"><h1>Messages</h1></div><p class="sub small">Messages envoyés depuis la page Contact. Répondez par e-mail à l\'adresse indiquée.</p>' + skeleton(3);
+    api('contact').then(function (d) {
+      var head = '<div class="vhead"><h1>Messages</h1></div><p class="sub small">Messages envoyés depuis la page Contact. Répondez par e-mail à l\'adresse indiquée.</p>';
+      if (!d.messages.length) { box.innerHTML = head + '<p class="empty">Aucun message pour le moment.</p>'; return; }
+      box.innerHTML = head + '<ul class="list">' + d.messages.map(function (m) {
+        return '<li class="card"><p><strong>' + esc(m.subject || 'Sans objet') + '</strong></p>' +
+          '<p class="sub small">' + esc(m.name) + ' · ' + esc(m.email) + ' · ' + esc(m.date) + '</p>' +
+          '<p style="white-space:pre-wrap">' + esc(m.body) + '</p></li>';
+      }).join('') + '</ul>';
+    }).catch(function (e) { box.innerHTML = '<p class="empty">' + esc(e.message) + '</p>'; });
+  }
   function loadMembers() {
     var box = $('v-members');
     if (!box.dataset.ready) {

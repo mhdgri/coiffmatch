@@ -452,6 +452,10 @@ async function team(path, method, q, body) {
     return { bookings: out.slice(0, 100) };
   }
   if ((m = path.match(/^bookings\/(\d+)\/cancel$/))) return { ok: true, message: check(await sb.rpc('cm_team_cancel', { p_id: +m[1] })) };
+  if (path === 'contact') {
+    const rows = check(await sb.from('contact_messages').select('*').order('created', { ascending: false }).limit(100)) || [];
+    return { messages: rows.map((r) => ({ id: r.id, name: r.name, email: r.email, subject: r.subject, body: r.body, date: fmtDayTime(r.created) })) };
+  }
   if (path === 'members') {
     const role = q.get('role') === 'coiffeur' ? 'coiffeur' : 'client';
     const rows = check(await sb.rpc('cm_team_members', { p_role: role, p_q: q.get('q') || '' })) || [];
