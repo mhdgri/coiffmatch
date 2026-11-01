@@ -185,7 +185,16 @@ function bindForms(ctx) {
     resetSessionCache();
     const prof = await myProfile();
     const role = prof ? prof.role : 'client';
-    go(target(f.dataset.type === 'team' ? 'team' : role === 'admin' ? 'team' : role, f.redirect ? f.redirect.value : ''));
+    let fresh = false;
+    try {
+      fresh = sessionStorage.getItem('cm_new') === f.log.value.trim().toLowerCase();
+      sessionStorage.removeItem('cm_new');
+    } catch {
+      /* rien */
+    }
+    const back = f.redirect ? f.redirect.value : '';
+    if (fresh && role === 'client' && !back) return go('/mon-compte/?cm_ok=1');
+    go(target(f.dataset.type === 'team' ? 'team' : role === 'admin' ? 'team' : role, back));
   }));
   document.querySelectorAll('form[data-cm-register]').forEach((f) => f.addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -228,8 +237,24 @@ function bindForms(ctx) {
       box.querySelector('.cm-account__grid').insertAdjacentHTML('beforebegin', notice(`Compte créé. Ouvrez l'e-mail envoyé à ${email} et cliquez sur le lien pour l'activer.`, 'ok'));
       return;
     }
-    const back = f.redirect ? f.redirect.value : '';
-    go(back ? target(f.dataset.type, back) : f.dataset.type === 'coiffeur' ? '/espace-coiffeur/' : '/mon-compte/?cm_ok=1');
+    // Comme sur WordPress : le compte est créé, puis on se connecte soi-même avec le formulaire.
+    await sb.auth.signOut();
+    try {
+      sessionStorage.setItem('cm_new', email.toLowerCase());
+    } catch {
+      /* rien */
+    }
+    const box = f.closest('.cm-account');
+    box.querySelectorAll('.cm-notice').forEach((n) => n.remove());
+    box.querySelector('.cm-account__grid').insertAdjacentHTML('beforebegin', notice(`Votre compte ${f.dataset.type === 'coiffeur' ? 'coiffeur' : 'client'} a été créé. Connectez-vous avec votre e-mail et votre mot de passe.`, 'ok'));
+    f.reset();
+    f.querySelector('button[type=submit]').disabled = false;
+    const login = box.querySelector('form[data-cm-login]');
+    if (login) {
+      login.log.value = email;
+      login.pwd.focus();
+    }
+    box.querySelector('.cm-notice').scrollIntoView({ block: 'center' });
   }));
   document.querySelectorAll('form[data-cm-lost]').forEach((f) => f.addEventListener('submit', async (ev) => {
     ev.preventDefault();
