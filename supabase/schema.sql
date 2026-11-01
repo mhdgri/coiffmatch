@@ -384,6 +384,11 @@ begin
   end if;
   insert into public.contact_messages (user_id, name, email, subject, body)
   values (auth.uid(), left(trim(p_name), 80), lower(trim(p_email)), left(coalesce(p_subject, ''), 80), left(trim(p_body), 3000));
+  -- Prévenir l'équipe par e-mail (envoyé si les e-mails sont branchés).
+  perform public.cm_mail(id, 'contact', 'Nouveau message de contact : ' || left(trim(p_name), 80),
+    'De : ' || left(trim(p_name), 80) || ' <' || lower(trim(p_email)) || '>' || chr(10) || chr(10) || left(trim(p_body), 3000) ||
+    chr(10) || chr(10) || 'Répondez directement à cette adresse. Le message est aussi dans l''espace équipe, onglet Messages.')
+  from public.profiles where role = 'admin';
 end $$;
 grant execute on function public.cm_contact(text, text, text, text) to anon, authenticated;
 
