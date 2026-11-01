@@ -205,7 +205,12 @@ function bindForms(ctx) {
     }
     const { data, error } = await sb.auth.signUp({ email, password: pw, options: { data: { first_name: first, role: f.dataset.type, ref }, emailRedirectTo: location.origin + '/mon-compte/?cm_ok=1' } });
     if (error) {
-      const msg = /already/i.test(error.message) ? `Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez une autre adresse pour un compte ${f.dataset.type === 'coiffeur' ? 'coiffeur' : 'client'}.` : /password/i.test(error.message) ? P.AUTH_ERRORS.pass : P.AUTH_ERRORS.error;
+      const msg = /already/i.test(error.message) ? `Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez une autre adresse pour un compte ${f.dataset.type === 'coiffeur' ? 'coiffeur' : 'client'}.` : /password/i.test(error.message) ? P.AUTH_ERRORS.pass
+        : /invalid/i.test(error.message) && /mail/i.test(error.message) ? `Supabase refuse l'adresse ${email}. Essayez une adresse avec un vrai nom de domaine, par exemple votre adresse Gmail avec +test avant le @.`
+        : /rate|too many|security purposes/i.test(error.message) ? 'Trop de comptes créés en peu de temps. Attendez quelques minutes, puis réessayez.'
+        : /database error/i.test(error.message) ? "Le compte n'a pas pu être enregistré dans la base. Relancez le fichier schema.sql dans Supabase, puis réessayez."
+        : /not allowed|disabled/i.test(error.message) ? 'Les inscriptions sont fermées pour le moment.'
+        : `Le compte n'a pas pu être créé (${error.message}). Réessayez.`;
       const box = f.closest('.cm-account');
       box.querySelectorAll('.cm-notice').forEach((n) => n.remove());
       box.querySelector('.cm-account__grid').insertAdjacentHTML('beforebegin', notice(msg));
