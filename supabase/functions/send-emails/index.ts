@@ -5,6 +5,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
+const esc = (t: string) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+// Adresses de test (@exemple.test…) : on ne les envoie pas, pour protéger la réputation du domaine.
+const fake = (a: string) => /@(exemple|example)\.|\.(test|example|invalid|localhost)$/i.test(a);
+
 Deno.serve(async (req) => {
   const payload = await req.json().catch(() => ({}));
   const ids = payload?.record?.id ? [payload.record.id] : [];
@@ -14,9 +18,13 @@ Deno.serve(async (req) => {
   let sent = 0;
   for (const m of mails ?? []) {
     if (!m.to_email) continue;
+    if (fake(m.to_email)) {
+      await db.from('email_outbox').update({ sent_at: new Date().toISOString() }).eq('id', m.id);
+      continue;
+    }
     const html = `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:auto;color:#10201D">
       <p style="font-family:Georgia,serif;font-size:22px;color:#0B2A27">Coiff'Match</p>
-      <h1 style="font-size:20px">${m.subject}</h1><p style="font-size:16px;line-height:1.5">${m.body}</p>
+      <h1 style="font-size:20px">${esc(m.subject)}</h1><p style="font-size:16px;line-height:1.5">${esc(m.body).replace(/\n/g, '<br>')}</p>
       <p style="font-size:13px;color:#55635F">Cet e-mail vous est envoyé par Coiff'Match à la suite d'une action sur votre compte.</p></div>`;
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
