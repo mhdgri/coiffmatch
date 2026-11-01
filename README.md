@@ -38,7 +38,7 @@ Le site reprend à l'identique le site WordPress d'origine : mêmes pages, même
 
 1. Ouvrez **SQL Editor** puis **New query**. Collez tout `supabase/schema.sql`, puis cliquez sur **Run**.
    ⚠️ Ce script remplace les tables de la première version.
-2. Faites de même avec `supabase/exemples.sql` : il ajoute 4 coiffeurs d'exemple et leurs avis, tous signalés comme exemples.
+2. Faites de même avec `supabase/exemples.sql` : il ajoute 16 coiffeurs d'exemple et leurs avis, tous signalés comme exemples.
 3. Ouvrez **Authentication** puis **Sign In / Providers** puis **Email**. Décochez **Confirm email**, puis cliquez sur **Save**.
 4. Ouvrez **Authentication** puis **URL Configuration**. Dans **Site URL**, mettez l'adresse du site, par exemple `https://coiffmatch.vercel.app`. Dans **Redirect URLs**, ajoutez `https://coiffmatch.vercel.app/**`.
 5. Pour devenir membre de l'équipe : créez votre compte sur le site, puis lancez cette commande dans le SQL Editor :

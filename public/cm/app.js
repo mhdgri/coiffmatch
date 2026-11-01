@@ -1329,7 +1329,7 @@
     form.innerHTML =
       '<h1>' + (p ? 'Mon profil' : 'Créer mon profil coiffeur') + '</h1>' +
       (p ? '' : '<p class="sub">Remplissez votre profil. Il sera vérifié par l\'équipe avant d\'apparaître dans la recherche.</p>') +
-      '<label class="field"><span class="label">Nom affiché</span><input id="cm-pf-name" maxlength="40" placeholder="Ex. : Nadia K. ou Salon Les Boucles"></label>' +
+      '<label class="field"><span class="label">Nom affiché</span><input id="cm-pf-name" maxlength="40" placeholder="Ex. : Nadia K."></label>' +
       '<div class="row"><label class="field"><span class="label">Je coiffe</span><select id="cm-pf-mode"><option value="salon">Au salon</option><option value="domicile">À domicile</option></select></label>' +
         '<label class="field"><span class="label">Ville ou quartier affiché</span><input id="cm-pf-place" maxlength="60" placeholder="Ex. : Paris 18e"></label></div>' +
       '<label class="field" id="cm-pf-addrField"><span class="label">Adresse du salon</span><input id="cm-pf-address" maxlength="120" autocomplete="street-address" placeholder="Ex. : 12 rue Oberkampf, 75011 Paris"><span class="sub small">Affichée sur votre profil avec un lien vers la carte.</span></label>' +
