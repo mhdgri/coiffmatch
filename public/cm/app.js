@@ -488,9 +488,13 @@
     var bar = $('diagbar'); if (!bar) return;
     var t = hairText(S.hairProfile);
     bar.innerHTML = t
-      ? '<span><strong>Vos cheveux :</strong> ' + esc(t) + '</span><button type="button" class="link" data-go="diag">Modifier</button> <button type="button" class="link" id="cm-clearhair">Voir tous les coiffeurs</button>'
+      ? '<span><strong>Vos cheveux :</strong> ' + esc(t) + '</span><button type="button" class="link" data-go="diag">Modifier</button> <button type="button" class="link" id="cm-clearhair">Effacer</button>'
       : '<span>Pas sûre de votre type ?</span><button type="button" class="link" data-go="diag">Faire le diagnostic</button>';
-    var ch = $('clearhair'); if (ch) ch.onclick = resetFilters;
+    var ch = $('clearhair'); if (ch) ch.onclick = function () {
+      S.hairProfile = {}; saveLocalHair({});
+      if (S.me && S.me.loggedIn && !PRO) api('me/hair', { method: 'POST', body: {} }).catch(function () {});
+      renderDiagBar(); resetFilters(); toast('Fiche cheveux effacée');
+    };
   }
   var DIAG_KEYS = ['type', 'length', 'thick', 'state', 'porosity', 'goal'];
   function renderDiag() {
