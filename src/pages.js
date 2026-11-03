@@ -83,7 +83,9 @@ export function home(d) {
   soon.sort((a, b) => (a.next.date + a.next.hour.padStart(5, '0')).localeCompare(b.next.date + b.next.hour.padStart(5, '0')));
   let html = `<section class="hero3"><canvas class="hero3__strands" aria-hidden="true"></canvas><div class="wrap hero3__inner"><h1 class="hero3__title">Chaque texture a son expert.</h1>` +
     '<p class="hero3__lead">Du plus raide au plus crépu, trouvez le coiffeur qui maîtrise vos cheveux, voyez son prochain créneau et réservez, au salon ou à domicile.</p>' +
-    `<form class="hero3__search" action="${APP}" method="get" role="search" aria-label="Rechercher un coiffeur"><label class="hero3__field"><span>Prestation</span><select name="service">` +
+    `<form class="hero3__search" action="${APP}" method="get" role="search" aria-label="Rechercher un coiffeur"><label class="hero3__field"><span>Vos cheveux</span><select name="hair" required><option value="" disabled selected>Choisir</option>` +
+    Object.entries(HAIR).map(([k, l]) => `<option value="${k}">${e(l)}</option>`).join('') +
+    '<option value="tous">Tous types</option></select></label><label class="hero3__field"><span>Prestation</span><select name="service">' +
     Object.entries(SERVICES).map(([k, l]) => `<option value="${k}">${e(l)}</option>`).join('') +
     '</select></label><label class="hero3__field hero3__field--grow"><span>Où ?</span><input type="search" name="ville" placeholder="Ville ou quartier" autocomplete="address-level2"></label><button type="submit">Voir les coiffeurs</button></form>' +
     `<a class="hero3__diag" href="${APP}?diag=1">Pas sûre de votre type ? Diagnostic en 30 secondes</a></div>` +
