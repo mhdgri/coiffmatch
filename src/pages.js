@@ -56,6 +56,26 @@ export function header(ctx) {
     `<nav id="site-nav" class="site-nav" aria-label="Navigation principale">${nav}</nav></div></header>`;
 }
 
+/* ---------------- Barre de navigation en bas (téléphone) ---------------- */
+const TB_ICONS = {
+  home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+};
+export function tabbar(ctx) {
+  const role = ctx.profile ? ctx.profile.role : '';
+  if (role === 'admin') return '';
+  const items = role === 'coiffeur'
+    ? [['pro', '/espace-coiffeur/', 'home', 'Accueil'], ['clients', '/espace-coiffeur/?tab=clientes', 'people', 'Clientes'], ['inbox', '/espace-coiffeur/?tab=messages', 'chat', 'Messages'], ['proedit', '/espace-coiffeur/?tab=profil', 'edit', 'Mon profil'], ['account', '/mon-compte/', 'user', 'Compte']]
+    : [['home', '/', 'home', 'Accueil'], ['search', '/trouver-un-coiffeur/', 'search', 'Rechercher'], ['mine', '/trouver-un-coiffeur/?tab=mine', 'cal', 'Rendez-vous'], ['inbox', '/trouver-un-coiffeur/?tab=inbox', 'chat', 'Messages'], ['account', ctx.profile ? '/mon-compte/' : '/connexion/', 'user', ctx.profile ? 'Compte' : 'Connexion']];
+  return `<nav class="cm-tabbar" aria-label="Navigation rapide">` + items.map(([k, href, ic, label]) =>
+    `<a href="${href}" data-tb="${k}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TB_ICONS[ic]}</svg><span>${label}</span></a>`).join('') + '</nav>';
+}
+
 export function footer() {
   return '<footer class="site-footer"><div class="wrap site-footer__inner"><div><p class="site-footer__brand">Coiff\'Match</p><p class="site-footer__tag"></p></div>' +
     '<nav aria-label="Liens du pied de page"><ul class="menu"><li><a href="/guide-des-cheveux/">Guide des cheveux</a></li><li><a href="/devenir-coiffeur-partenaire/">Devenir coiffeur partenaire</a></li><li><a href="/espace-coiffeur/">Espace coiffeur</a></li><li><a href="/contact/">Contact</a></li></ul></nav></div>' +
@@ -83,9 +103,9 @@ export function home(d) {
   soon.sort((a, b) => (a.next.date + a.next.hour.padStart(5, '0')).localeCompare(b.next.date + b.next.hour.padStart(5, '0')));
   let html = `<section class="hero3"><canvas class="hero3__strands" aria-hidden="true"></canvas><div class="wrap hero3__inner"><h1 class="hero3__title">Chaque texture a son expert.</h1>` +
     '<p class="hero3__lead">Du plus raide au plus crépu, trouvez le coiffeur qui maîtrise vos cheveux, voyez son prochain créneau et réservez, au salon ou à domicile.</p>' +
-    `<form class="hero3__search" action="${APP}" method="get" role="search" aria-label="Rechercher un coiffeur"><label class="hero3__field"><span>Vos cheveux</span><select name="hair" required><option value="" disabled selected>Choisir</option>` +
-    Object.entries(HAIR).map(([k, l]) => `<option value="${k}">${e(l)}</option>`).join('') +
-    '<option value="tous">Tous types</option></select></label><label class="hero3__field"><span>Prestation</span><select name="service">' +
+    `<form class="hero3__search" action="${APP}" method="get" role="search" aria-label="Rechercher un coiffeur"><fieldset class="hero3__hair"><legend>Vos cheveux</legend><div class="hero3__chips">` +
+    [...Object.entries(HAIR), ['tous', 'Tous types']].map(([k, l], i) => `<label class="hero3__chip"><input type="radio" name="hair" value="${k}"${i === 0 ? ' required' : ''}><span>${e(l)}</span></label>`).join('') +
+    '</div></fieldset><label class="hero3__field"><span>Prestation</span><select name="service">' +
     Object.entries(SERVICES).map(([k, l]) => `<option value="${k}">${e(l)}</option>`).join('') +
     '</select></label><label class="hero3__field hero3__field--grow"><span>Où ?</span><input type="search" name="ville" placeholder="Ville ou quartier" autocomplete="address-level2"></label><button type="submit">Voir les coiffeurs</button></form>' +
     `<a class="hero3__diag" href="${APP}?diag=1">Pas sûre de votre type ? Diagnostic en 30 secondes</a></div>` +
@@ -251,6 +271,7 @@ export function pro(d) {
     const others = same.filter((o) => o.id !== x.id).slice(0, 3);
     if (others.length) html += `<section class="cm-pub-wrap cm-pub-sec cm-pub-others"><h2>Aussi à ${e(x.place)}</h2><ul class="cm-pub-list">` + others.map((o) => `<li><a href="${e(o.url)}"><strong>${e(o.name)}</strong><span>${e((o.mode === 'domicile' ? 'À domicile · ' : 'Salon · ') + o.place)}</span></a></li>`).join('') + '</ul></section>';
   }
+  html += `<div class="cm-pub-sticky" role="region" aria-label="Réserver ${e(x.name)}"><p class="cm-pub-sticky__txt">${prices.length ? `<strong>dès ${Math.min(...prices)} €</strong>` : ''}<span>${next ? 'Prochain créneau : ' + e(next.label) : 'Aucun créneau libre'}</span></p><a class="cm-pub-btn" href="${book}">Réserver</a></div>`;
   html += '</div>';
   const lab = x.hair.map((h) => lower(HAIR[h]));
   const words = x.bio.trim().split(/\s+/);

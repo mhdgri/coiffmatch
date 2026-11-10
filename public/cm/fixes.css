@@ -22,3 +22,111 @@
 .cm-app .startlist .gauge { height: 10px; border-radius: 999px; background: #E3E8E5; overflow: hidden; margin: 10px 0 8px; }
 .cm-app .startlist .gauge span { display: block; height: 100%; border-radius: 999px; background: #C99A3E; transition: width .4s ease; }
 @media (prefers-reduced-motion: reduce) { .cm-app .startlist .gauge span { transition: none; } }
+
+/* ---------- Barre de navigation en bas (téléphone) ---------- */
+.cm-tabbar { display: none; }
+@media (max-width: 759px) {
+  body.cm-tb .cm-tabbar {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    height: calc(64px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #FBFBF8; border-top: 1px solid #D9DFDB; box-shadow: 0 -8px 24px -18px rgba(11, 42, 39, .45);
+  }
+  .cm-tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 48px;
+    color: #55635F; text-decoration: none; font: 500 11.5px/1.1 'DM Sans', system-ui, sans-serif; }
+  .cm-tabbar a[aria-current="page"] { color: #0B2A27; font-weight: 700; }
+  .cm-tabbar a[aria-current="page"] svg { stroke-width: 2.3; }
+  .cm-tabbar a:focus-visible { outline: 3px solid #C99A3E; outline-offset: -3px; border-radius: 10px; }
+  body.cm-tb:not(.cm-tb-off) { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  body.cm-tb:not(.cm-tb-off) .cm-app .bar { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  body.cm-tb:not(.cm-tb-off) .cm-app .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  body.cm-tb-off .cm-tabbar { display: none !important; }
+}
+@media print { .cm-tabbar { display: none !important; } }
+@media (max-width: 759px) {
+  /* La barre du bas remplace les onglets du haut de l'application. */
+  body.cm-tb .cm-app--client > .top, body.cm-tb #cm-app.cm-app--pro > .top { display: none; }
+}
+.cm-tabbar a { position: relative; }
+.cm-tabbar__n { position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #B4321F; color: #FFF; font: 700 11px/18px 'DM Sans', system-ui, sans-serif; text-align: center; box-sizing: border-box; }
+
+/* ---------- Accueil : type de cheveux en boutons ---------- */
+.hero3__search { flex-wrap: wrap; border-radius: 28px; }
+.hero3__hair { flex: 1 1 100%; margin: 0; border: 0; border-bottom: 1px solid var(--line); padding: 10px 14px 12px; min-width: 0; }
+.hero3__hair legend { float: left; width: 100%; padding: 0 6px 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.hero3__chips { clear: both; display: flex; flex-wrap: wrap; gap: 8px; }
+.hero3__chip { position: relative; display: inline-flex; cursor: pointer; }
+.hero3__chip input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.hero3__chip span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid #C9D1CD; background: var(--paper); color: var(--fg); font-size: 15px; font-weight: 500; transition: background-color .12s ease, color .12s ease, border-color .12s ease; }
+.hero3__chip:hover span { border-color: var(--ink); }
+.hero3__chip input:checked + span { background: var(--ink); border-color: var(--ink); color: #F0F2EE; font-weight: 700; }
+.hero3__chip input:focus-visible + span { outline: 3px solid var(--gold); outline-offset: 2px; }
+@media (min-width: 861px) { .hero3__search > .hero3__field:first-of-type { padding-left: 20px; } }
+@media (max-width: 860px) {
+  .hero3__hair { padding: 10px 8px 12px; }
+  .hero3__chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -8px; padding: 0 8px 2px; scroll-padding: 8px; }
+  .hero3__chips::-webkit-scrollbar { display: none; }
+  .hero3__chip { flex: none; }
+}
+@media (prefers-reduced-motion: reduce) { .hero3__chip span { transition: none; } }
+@media (max-width: 860px) { .hero3__search { flex-wrap: nowrap; } }
+
+/* ---------- Résultats : filtres rapides ---------- */
+.cm-app .qf { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 10px; }
+.cm-app .qf__b, .cm-app .qf__b:hover { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C9D1CD; background: #FBFBF8; color: #10201D; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.cm-app .qf__b:hover { border-color: #0B2A27; }
+.cm-app .qf__b[aria-pressed="true"] { background: #0B2A27; border-color: #0B2A27; color: #F0F2EE; font-weight: 700; }
+@media (max-width: 759px) {
+  .cm-app .qf { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-left: -16px; margin-right: -16px; padding: 0 16px 2px; }
+  .cm-app .qf::-webkit-scrollbar { display: none; }
+  .cm-app .qf__b { flex: none; }
+
+  /* Fiches compactes : image à gauche, comme une appli */
+  .cm-app .results .rc { position: relative; padding: 12px; border-radius: 18px; background: #FBFBF8; border: 1px solid #E3E8E5; gap: 10px; }
+  .cm-app .rc__card, .cm-app .rc__card:hover { flex-direction: row; gap: 12px; align-items: stretch; }
+  .cm-app .rc .ph.rc__img { flex: none; width: 104px; height: 118px; aspect-ratio: auto; border-radius: 12px; }
+  .cm-app .rc__body { flex: 1; min-width: 0; padding: 2px 0 0; gap: 3px; }
+  .cm-app .rc .name { font-size: 16px; }
+  .cm-app .rc__rate { font-size: 14px; }
+  .cm-app .rc .sub, .cm-app .rc__skills { font-size: 13px; }
+  .cm-app .rc__tag { left: 18px; top: 18px; padding: 2px 8px; font-size: 11px; }
+  .cm-app .rc .heart, .cm-app .rc .heart:hover { top: auto; right: auto; left: 76px; bottom: auto; top: 98px; width: 36px; height: 36px; }
+  .cm-app .rc .nextslot, .cm-app .rc .nextslot:hover { min-height: 44px; }
+}
+
+/* ---------- Fiche coiffeur publique : barre Réserver collée en bas (téléphone) ---------- */
+.cm-pub-sticky { display: none; }
+@media (max-width: 759px) {
+  .cm-pub-sticky { display: flex; align-items: center; gap: 12px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: #FBFBF8; border-top: 1px solid #D9DFDB; box-shadow: 0 -6px 18px rgba(11, 42, 39, .08); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .cm-pub-sticky__txt { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; line-height: 1.25; color: #0B2A27; }
+  .cm-pub-sticky__txt strong { font-size: 17px; }
+  .cm-pub-sticky__txt span { font-size: 13px; color: #55635F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cm-pub-sticky .cm-pub-btn { flex: none; min-height: 50px; padding: 0 26px; background: #E4B65F; color: #0B2A27 !important; font-size: 16px; }
+  .cm-pub-sticky .cm-pub-btn:hover { background: #D9A94F; }
+  body.cm-public--pro { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ---------- Réservation : total et bouton collés en bas ---------- */
+.cm-app .bar--sum { display: flex; align-items: center; gap: 14px; }
+.cm-app .bar__sum { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.cm-app .bar__sum strong { font-size: 18px; color: #0B2A27; }
+.cm-app .bar__sum span { font-size: 13px; color: #55635F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-app .bar--sum .cta, .cm-app .bar--sum .cta:hover { width: auto; flex: none; padding: 0 22px; }
+@media (max-width: 759px) {
+  #cm-v-book .bar--sum { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; background: #FBFBF8; border-top: 1px solid #D9DFDB; box-shadow: 0 -6px 18px rgba(11, 42, 39, .08); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  #cm-v-book .bar--sum .cta { background: #E4B65F; color: #0B2A27; }
+  #cm-v-book { padding-bottom: 96px; }
+}
+
+/* ---------- Espace coiffeur : grands boutons Accepter / Refuser ---------- */
+.cm-app .rq-acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.cm-app .rq-acts button, .cm-app .rq-acts button:hover { min-height: 48px; border-radius: 999px; font-size: 15px; font-weight: 700; padding: 0 12px; }
+.cm-app .rq-ok, .cm-app .rq-ok:hover { background: #0B2A27; color: #F0F2EE; border: 0; }
+.cm-app .rq-ok:hover:not(:disabled) { background: #123A36; }
+.cm-app .rq-no, .cm-app .rq-no:hover { background: #FBFBF8; color: #0B2A27; border: 1px solid #C9D1CD; }
+.cm-app .rq-no:hover { border-color: #8A2E22; color: #8A2E22; }
+.cm-app .rq-write { align-self: flex-start; }
+@media (min-width: 760px) { .cm-app .rq-acts { max-width: 360px; } }
+.cm-app .rq-no[data-sure="1"], .cm-app .rq-no[data-sure="1"]:hover { background: #8A2E22; border-color: #8A2E22; color: #FFF; }
+/* L'animation d'entrée gardait un transform sur la vue (fill: both), ce qui empêchait les barres « fixed » de coller à l'écran. */
+@media (prefers-reduced-motion: no-preference) { .cm-app .view:not([hidden]) { animation-fill-mode: backwards; } }

@@ -274,6 +274,7 @@
         '<div class="results__head"><h1 class="results__title">Résultats de la recherche</h1>' +
           '<div class="viewtoggle" role="group" aria-label="Affichage des résultats"><button type="button" id="cm-asList" aria-pressed="true">Liste</button><button type="button" id="cm-asMap" aria-pressed="false">Carte</button></div></div>' +
         '<div class="recent" id="cm-recent" hidden></div>' +
+        '<div class="qf" id="cm-qf" role="group" aria-label="Filtres rapides"></div>' +
         '<p class="count" id="cm-count" aria-live="polite"></p>' +
         '<div class="mapbox" id="cm-map" hidden></div>' +
         '<ul class="list" id="cm-results"></ul>' +
@@ -321,7 +322,7 @@
           '<div class="l sub" id="cm-r-restRow"><span>Reste à payer sur place</span><span id="cm-r-rest"></span></div>' +
           '<div class="l sep" id="cm-r-onsiteRow"><span>Paiement</span><strong>Sur place, au coiffeur</strong></div></div>' +
         '<p class="note">' + ICON.shield + '<span id="cm-b-note"></span></p>' +
-        '<div class="bar"><button class="cta" type="submit" id="cm-confirm">Envoyer la demande</button></div>' +
+        '<div class="bar bar--sum"><p class="bar__sum" aria-live="polite"><strong id="cm-bs-total"></strong><span id="cm-bs-when"></span></p><button class="cta" type="submit" id="cm-confirm">Envoyer la demande</button></div>' +
       '</form>' +
     '</section>' +
 
@@ -402,6 +403,7 @@
   function show(v) {
     if (S.poll) { clearInterval(S.poll); S.poll = null; }
     syncUrl(v);
+    if (window.cmTabbar) window.cmTabbar(v);
     VIEWS.forEach(function (n) { $('v-' + n).hidden = n !== v; });
     var tab = { mine: 'mine', review: 'mine', inbox: 'inbox', thread: 'inbox', pro: 'pro', proedit: 'proedit', clients: 'clients' }[v] || 'search';
     root.querySelectorAll('.tabs button').forEach(function (t) { t.setAttribute('aria-current', t.dataset.tab === tab ? 'page' : 'false'); });
@@ -439,6 +441,16 @@
       var acct = document.querySelector('.acct > summary');
       if (acct) acct.classList.toggle('has-unread', !!me.unread);
       if ($('b-pending')) { $('b-pending').hidden = !me.pending; $('b-pending').textContent = me.pending || ''; }
+      // Mêmes pastilles sur la barre du bas (téléphone).
+      [['inbox', me.unread], [PRO ? 'pro' : '', me.pending]].forEach(function (x) {
+        var link = x[0] && document.querySelector('.cm-tabbar [data-tb="' + x[0] + '"]');
+        if (!link) return;
+        var dot = link.querySelector('.cm-tabbar__n');
+        if (!x[1]) { if (dot) dot.remove(); return; }
+        if (!dot) { dot = document.createElement('b'); dot.className = 'cm-tabbar__n'; link.appendChild(dot); }
+        dot.textContent = x[1] > 9 ? '9+' : x[1];
+        link.setAttribute('aria-label', link.querySelector('span').textContent + ' (' + x[1] + ' en attente)');
+      });
       // Un compte coiffeur qui ouvre l'espace client : il est renvoyé vers son espace.
       var note = $('roleNote');
       if (!PRO && me.role === 'coiffeur') {
@@ -588,8 +600,25 @@
     var sm = document.querySelector('#cm-filters > summary');
     if (sm) sm.innerHTML = 'Filtrer les résultats' + (n ? ' <span class="fcount">' + n + '</span>' : '');
   }
+  /* Filtres rapides (puces au-dessus des résultats) : les mêmes réglages que le panneau « Filtrer ». */
+  function renderQuick() {
+    var box = $('qf');
+    if (!box) return;
+    var Q = [
+      ['avail', 'Dispo demain', S.avail, function () { S.avail = !S.avail; }],
+      ['domicile', 'À domicile', S.where === 'domicile', function () { S.where = S.where === 'domicile' ? 'all' : 'domicile'; }],
+      ['salon', 'Au salon', S.where === 'salon', function () { S.where = S.where === 'salon' ? 'all' : 'salon'; }],
+      ['price', '50 € max', S.maxprice === '50', function () { S.maxprice = S.maxprice === '50' ? '' : '50'; }],
+      ['verified', 'Diplôme vérifié', S.onlyVerified, function () { S.onlyVerified = !S.onlyVerified; }]
+    ];
+    box.innerHTML = Q.map(function (q) { return '<button type="button" class="qf__b" data-q="' + q[0] + '" aria-pressed="' + (!!q[2]) + '">' + esc(q[1]) + '</button>'; }).join('');
+    box.querySelectorAll('button').forEach(function (b, i) {
+      b.onclick = function () { Q[i][3](); syncFilters(); renderQuick(); loadResults(); };
+    });
+  }
   function renderResults(list) {
     var ul = $('results');
+    renderQuick();
     var rt = root.querySelector('.results__title');
     if (rt) rt.textContent = S.hair ? 'Coiffeurs pour cheveux ' + hairLabel(S.hair).toLowerCase() : 'Coiffeurs, tous types de cheveux';
     filterCount();
@@ -882,6 +911,8 @@
     $('r-price').textContent = (plus && !S.length ? 'dès ' : '') + price + ' €';
     drawBookPhotos();
     $('r-when').textContent = (S.hour ? day.label + ' à ' + S.hour : 'Choisissez une heure') + ' · ' + (p.mode === 'domicile' ? 'à votre domicile' : (p.address || p.place));
+    $('bs-total').textContent = (plus && !S.length ? 'dès ' : '') + (price + travel) + ' €';
+    $('bs-when').textContent = S.hour ? day.label + ' à ' + S.hour : 'Choisissez une heure';
     var demo = C.payment === 'demo';
     $('r-depositRow').hidden = !demo; $('r-restRow').hidden = !demo; $('r-onsiteRow').hidden = demo;
     $('r-deposit').textContent = C.deposit + ' €';
@@ -1182,7 +1213,7 @@
         var li = el('<li class="rdv"></li>');
         li.innerHTML = '<span class="pill warn" style="align-self:flex-start">À confirmer</span><strong>' + esc(b.firstName) + '</strong>' +
           '<span class="sub">' + esc(b.label) + (b.staffName ? ' · avec ' + esc(b.staffName) : '') + (b.hair ? ' · cheveux ' + esc(hairLabel(b.hair).toLowerCase()) : '') + (b.lengthLabel ? ' (' + esc(b.lengthLabel.replace('cheveux ', '')) + ')' : '') + ' · ' + esc(b.dateLabel) + ' à ' + esc(b.hour) + ' · ' + fmtDur(b.dur) + ' · ' + b.total + ' €</span>' + (b.hairProfile ? '<span class="sub">Ses cheveux : ' + esc(b.hairProfile) + '</span>' : '') + photoStrip(b) + contactLine(b) +
-          '<div class="actions"><button type="button" class="link">Accepter</button><button type="button" class="link danger">Refuser</button><button type="button" class="link">Écrire</button></div>';
+          '<div class="rq-acts"><button type="button" class="rq-ok">Accepter</button><button type="button" class="rq-no">Refuser</button></div><button type="button" class="link rq-write">Écrire à ' + esc(b.firstName) + '</button>';
         var bs = li.querySelectorAll('button');
         bs[0].onclick = function () { busy(bs[0], true); setBooking(b.id, 'confirmed').catch(function (e) { busy(bs[0], false); toast(e.message); }); };
         twoStep(bs[1], 'Confirmer le refus', function () { return setBooking(b.id, 'refused'); });

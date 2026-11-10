@@ -319,10 +319,30 @@ function alertIn(f, msg) {
   f.insertAdjacentHTML('afterbegin', notice(msg));
 }
 
+/* Barre du bas : onglet actif d'après l'adresse, et masquée sur les écrans qui ont leur propre bouton en bas. */
+function tabbarState(view) {
+  const bar = document.querySelector('.cm-tabbar');
+  if (!bar) return;
+  const q = new URLSearchParams(location.search);
+  const path = location.pathname;
+  const tab = q.get('tab');
+  let cur = '';
+  if (path === '/') cur = 'home';
+  else if (path === '/trouver-un-coiffeur/') cur = view === 'mine' || view === 'done' || view === 'review' || tab === 'mine' ? 'mine' : view === 'inbox' || view === 'thread' || tab === 'inbox' ? 'inbox' : 'search';
+  else if (path === '/espace-coiffeur/') cur = view ? ({ pro: 'pro', clients: 'clients', inbox: 'inbox', thread: 'inbox', proedit: 'proedit' }[view] || 'pro') : ({ clientes: 'clients', messages: 'inbox', profil: 'proedit' }[tab] || 'pro');
+  else if (path === '/mon-compte/' || path === '/connexion/') cur = 'account';
+  bar.querySelectorAll('a').forEach((a) => (a.dataset.tb === cur ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+  const own = view && ['profile', 'book', 'review', 'thread', 'diag'].includes(view);
+  document.body.classList.toggle('cm-tb-off', !!own || document.body.classList.contains('cm-public--pro'));
+  document.body.classList.add('cm-tb');
+}
+
 /* ---------------- Page ---------------- */
 function Page({ ctx, r }) {
   useEffect(() => {
     bindForms(ctx);
+    window.cmTabbar = tabbarState;
+    tabbarState();
     (async () => {
       if (r.config) window.CM_CONFIG = r.config;
       for (const src of r.scripts) await script(src);
@@ -338,6 +358,7 @@ function Page({ ctx, r }) {
       <div dangerouslySetInnerHTML={{ __html: P.header(ctx) }} style={{ display: 'contents' }} />
       <main id="contenu" className="site-main" dangerouslySetInnerHTML={{ __html: r.html }} />
       <div dangerouslySetInnerHTML={{ __html: P.footer() }} style={{ display: 'contents' }} />
+      <div dangerouslySetInnerHTML={{ __html: P.tabbar(ctx) }} style={{ display: 'contents' }} />
     </>
   );
 }
