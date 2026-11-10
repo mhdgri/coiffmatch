@@ -103,12 +103,12 @@ export function home(d) {
   soon.sort((a, b) => (a.next.date + a.next.hour.padStart(5, '0')).localeCompare(b.next.date + b.next.hour.padStart(5, '0')));
   let html = `<section class="hero3"><canvas class="hero3__strands" aria-hidden="true"></canvas><div class="wrap hero3__inner"><h1 class="hero3__title">Chaque texture a son expert.</h1>` +
     '<p class="hero3__lead">Du plus raide au plus crépu, trouvez le coiffeur qui maîtrise vos cheveux, voyez son prochain créneau et réservez, au salon ou à domicile.</p>' +
-    `<form class="hero3__search" action="${APP}" method="get" role="search" aria-label="Rechercher un coiffeur"><fieldset class="hero3__hair"><legend>Vos cheveux</legend><div class="hero3__chips">` +
-    [...Object.entries(HAIR), ['tous', 'Tous types']].map(([k, l], i) => `<label class="hero3__chip"><input type="radio" name="hair" value="${k}"${i === 0 ? ' required' : ''}><span>${e(l)}</span></label>`).join('') +
+    `<form class="hero3__search" action="${APP}" method="get" role="search" aria-label="Rechercher un coiffeur"><fieldset class="hero3__hair"><legend class="hero3__q">Quel type de cheveux avez-vous ?</legend><a class="hero3__dunno" href="${APP}?diag=1">Je ne sais pas</a><div class="hero3__chips">` +
+    [...Object.entries(HAIR), ['tous', 'Tous types']].map(([k, l], i) => `<label class="hero3__chip"><input type="radio" name="hair" value="${k}"${i === 0 ? ' required' : ''}><span>${k === 'tous' ? '' : `<img src="/cm/hair/${k}.svg" alt="" width="20" height="20">`}${e(l)}</span></label>`).join('') +
     '</div></fieldset><label class="hero3__field"><span>Prestation</span><select name="service">' +
     Object.entries(SERVICES).map(([k, l]) => `<option value="${k}">${e(l)}</option>`).join('') +
     '</select></label><label class="hero3__field hero3__field--grow"><span>Où ?</span><input type="search" name="ville" placeholder="Ville ou quartier" autocomplete="address-level2"></label><button type="submit">Voir les coiffeurs</button></form>' +
-    `<a class="hero3__diag" href="${APP}?diag=1">Pas sûre de votre type ? Diagnostic en 30 secondes</a></div>` +
+    '</div>' +
     '<ul class="hero3__types wrap" aria-label="Choisissez votre type de cheveux">' +
     Object.entries(HAIR).map(([k, l]) => `<li><a href="${APP}?hair=${k}"><strong>${e(l)}</strong><span>${e(hint[k])}</span></a></li>`).join('') + '</ul></section>' +
     `<section class="recent-home" id="recent-home" hidden data-app="${APP}" data-tex="/cm/hair/" data-live="${pub.map(({ p }) => p.id).join(',')}" aria-labelledby="recent-home-t"><div class="wrap recent-home__inner"><div class="recent-home__head"><h2 class="recent-home__t" id="recent-home-t">Reprendre où vous en étiez</h2><button type="button" class="recent-home__clear">Effacer</button></div><ul class="recent-home__row"></ul></div></section>`;

@@ -180,3 +180,25 @@
   .recent-home__it strong { font-size: 15px; }
   .recent-home__it small { font-size: 13px; }
 }
+
+/* ---------- Accueil : la question « Quel type de cheveux avez-vous ? » en tête du formulaire ---------- */
+.hero3__hair { padding: 16px 16px 14px; }
+.hero3__hair legend.hero3__q { float: left; width: auto; max-width: calc(100% - 120px); padding: 0 4px 12px; font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.15; color: var(--ink); letter-spacing: 0; text-wrap: balance; }
+.hero3__dunno { float: right; margin: 3px 4px 0 0; color: #7A5714; font-size: 14px; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; white-space: nowrap; }
+.hero3__dunno::after { content: " ›"; text-decoration: none; }
+.hero3__dunno:hover { color: #5C410F; }
+.hero3__chip span { gap: 8px; }
+.hero3__chip img { width: 20px; height: 20px; flex: none; }
+.hero3__chip input:checked + span img { filter: brightness(0) invert(1); }
+@media (max-width: 759px) {
+  .hero3__hair { padding: 14px 12px 12px; }
+  .hero3__hair legend.hero3__q { max-width: 100%; float: none; display: block; padding: 0 2px 4px; font-size: 21px; }
+  .hero3__dunno { float: none; display: inline-block; margin: 0 2px 10px; }
+  .hero3__chip span { padding: 0 12px; gap: 6px; }
+  .hero3__chip img { width: 18px; height: 18px; }
+}
+@media (max-width: 759px) {
+  .hero3__chips { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .hero3__chip { display: flex; min-width: 0; }
+  .hero3__chip span { flex: 1; justify-content: center; min-width: 0; padding: 0 6px; font-size: 14px; white-space: nowrap; }
+}
