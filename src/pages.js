@@ -111,7 +111,7 @@ export function home(d) {
     `<a class="hero3__diag" href="${APP}?diag=1">Pas sûre de votre type ? Diagnostic en 30 secondes</a></div>` +
     '<ul class="hero3__types wrap" aria-label="Choisissez votre type de cheveux">' +
     Object.entries(HAIR).map(([k, l]) => `<li><a href="${APP}?hair=${k}"><strong>${e(l)}</strong><span>${e(hint[k])}</span></a></li>`).join('') + '</ul></section>' +
-    `<section class="recent-home" id="recent-home" hidden data-app="${APP}" data-tex="/cm/hair/"><div class="wrap recent-home__inner"><p class="recent-home__t">Reprendre où vous en étiez</p><div class="recent-home__row"></div></div></section>`;
+    `<section class="recent-home" id="recent-home" hidden data-app="${APP}" data-tex="/cm/hair/" data-live="${pub.map(({ p }) => p.id).join(',')}" aria-labelledby="recent-home-t"><div class="wrap recent-home__inner"><div class="recent-home__head"><h2 class="recent-home__t" id="recent-home-t">Reprendre où vous en étiez</h2><button type="button" class="recent-home__clear">Effacer</button></div><ul class="recent-home__row"></ul></div></section>`;
   if (soon.length) {
     html += '<section class="section"><div class="wrap soon"><div><h2 class="soon__title">Les prochains créneaux</h2><p class="soon__lead">Des coiffeurs qui maîtrisent les cheveux texturés, et l\'heure à laquelle ils peuvent vous recevoir.</p>' +
       `<a class="btn btn--ghost" href="${APP}?sort=soon">Tous les coiffeurs</a></div><ul class="soon__list">` +

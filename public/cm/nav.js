@@ -23,28 +23,39 @@
   tick();
 })();
 
-/* « Reprendre où vous en étiez » : les profils vus récemment (stockés dans ce navigateur seulement). */
+/* « Reprendre où vous en étiez » : les profils vus récemment (stockés dans ce navigateur seulement).
+   Un profil retiré du site disparaît de la liste ; « Effacer » vide l'historique. */
 (function () {
   var box = document.getElementById('recent-home');
   if (!box) return;
   var list = [];
   try { list = JSON.parse(localStorage.getItem('cm_recent') || '[]'); } catch (e) { list = []; }
-  if (!Array.isArray(list) || !list.length) return;
+  if (!Array.isArray(list)) list = [];
+  var live = (box.getAttribute('data-live') || '').split(',').filter(Boolean);
+  if (live.length) list = list.filter(function (x) { return x && live.indexOf(String(x.id)) !== -1; });
+  if (!list.length) return;
   var app = box.getAttribute('data-app'), tex = box.getAttribute('data-tex');
   var row = box.querySelector('.recent-home__row');
   list.slice(0, 4).forEach(function (x) {
+    var li = document.createElement('li');
     var a = document.createElement('a');
     a.className = 'recent-home__it';
     a.href = x.url || (app + (app.indexOf('?') === -1 ? '?' : '&') + 'pro=' + encodeURIComponent(x.id));
     var img = document.createElement('img');
-    img.alt = ''; img.src = x.photo || (tex + (x.hair || 'boucles') + '.svg');
+    var art = tex + (x.hair || 'boucles') + '.svg';
+    img.alt = ''; img.src = x.photo || art; img.setAttribute('data-fb', art);
     if (!x.photo) img.className = 't';
-    var t = document.createElement('span');
+    var t = document.createElement('span'); t.className = 'recent-home__txt';
     var s = document.createElement('strong'); s.textContent = x.name;
     var m = document.createElement('small'); m.textContent = (x.mode === 'domicile' ? 'À domicile · ' : 'Salon · ') + (x.place || '');
-    t.appendChild(s); t.appendChild(m); a.appendChild(img); a.appendChild(t); row.appendChild(a);
+    t.appendChild(s); t.appendChild(m); a.appendChild(img); a.appendChild(t);
+    li.appendChild(a); row.appendChild(li);
   });
   box.hidden = false;
+  box.querySelector('.recent-home__clear').addEventListener('click', function () {
+    try { localStorage.removeItem('cm_recent'); } catch (e) {}
+    box.hidden = true;
+  });
 })();
 
 /* Barre de progression : chaque clic qui charge une page, ou chaque échange avec l'application, se voit tout de suite. */

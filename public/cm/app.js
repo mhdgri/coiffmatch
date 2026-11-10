@@ -129,6 +129,9 @@
       localStorage.setItem('cm_recent', JSON.stringify(l.slice(0, 6)));
     } catch (e) {}
   }
+  function recentDrop(id) {
+    try { localStorage.setItem('cm_recent', JSON.stringify(recentGet().filter(function (x) { return x.id !== id; }))); } catch (e) {}
+  }
   function renderRecent() {
     var box = $('recent'); if (!box) return;
     var l = recentGet();
@@ -707,7 +710,11 @@
         S.day = di === -1 ? firstOpenDay() : di; S.hour = di === -1 ? null : preset.hour;
         $('formErr').hidden = true; show('book');
       }
-    }).catch(function (e) { $('p-body').innerHTML = '<p class="empty">' + esc(e.message) + '</p>'; });
+    }).catch(function (e) {
+      // Profil retiré du site : on le sort aussi des « vus récemment ».
+      if (e && e.status === 404) recentDrop(id);
+      $('p-body').innerHTML = '<p class="empty">' + esc(e.status === 404 ? 'Ce profil n\'est plus en ligne.' : e.message) + '</p><button type="button" class="ghost" data-go="search" style="align-self:center">Voir les autres coiffeurs</button>';
+    });
   }
   function cur() { return S.pro && S.pro.presta.filter(function (x) { return x.k === S.presta; })[0]; }
 
