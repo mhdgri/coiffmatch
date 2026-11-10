@@ -81,4 +81,4 @@ export function proDesc(x) {
 }
 export const proTitle = (x) => x.name + ' – coiffure ' + (x.mode === 'domicile' ? 'à domicile' : 'en salon') + ', ' + x.place;
 export const proPath = (x) => `/coiffeur/${x.slug || x.id}/`;
-export const fr = (n) => String(n).replace('.', ',');
+export const fr = (n) => Number(n).toFixed(1).replace('.', ',');
