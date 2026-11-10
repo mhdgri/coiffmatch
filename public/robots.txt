@@ -5,3 +5,6 @@ Disallow: /equipe/
 Disallow: /connexion/
 Disallow: /mot-de-passe/
 Disallow: /api/
+Allow: /api/og
+
+Sitemap: https://coiffmatch.vercel.app/sitemap.xml

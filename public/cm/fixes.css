@@ -3,3 +3,22 @@
 .cm-legal__table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* Pages légales sur téléphone : la colonne ne doit pas s’élargir à cause du tableau. */
 @media (max-width: 860px) { .legal2 { grid-template-columns: minmax(0, 1fr); } }
+
+/* Espace équipe : chiffres du mois */
+.cm-app .mgoal { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: 14px; background: #F3E9D2; color: #3A2E12; margin: 8px 0 18px; }
+.cm-app .mgoal b { font-size: 1.9rem; white-space: nowrap; }
+.cm-app .mgoal--ok { background: #DDEFE3; color: #123A22; }
+.cm-app .mtbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #D9DFDB; border-radius: 14px; background: #FBFBF8; }
+.cm-app .mtbl { border-collapse: collapse; width: 100%; min-width: 760px; font-size: .95rem; }
+.cm-app .mtbl th, .cm-app .mtbl td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #E5E9E6; white-space: nowrap; }
+.cm-app .mtbl thead th { font-weight: 700; background: #F0F2EE; }
+.cm-app .mtbl th[scope="row"], .cm-app .mtbl thead th:first-child { text-align: left; white-space: normal; min-width: 210px; }
+.cm-app .mtbl td.mtbl__goal { color: #55635F; text-align: left; }
+.cm-app .mtbl tbody tr:last-child th, .cm-app .mtbl tbody tr:last-child td { border-bottom: none; }
+.cm-app .mtbl .mtbl__now { background: #F3E9D2; font-weight: 700; }
+.cm-app .mtbl thead th:nth-child(2) { text-align: left; }
+
+/* Espace coiffeur : jauge du profil */
+.cm-app .startlist .gauge { height: 10px; border-radius: 999px; background: #E3E8E5; overflow: hidden; margin: 10px 0 8px; }
+.cm-app .startlist .gauge span { display: block; height: 100%; border-radius: 999px; background: #C99A3E; transition: width .4s ease; }
+@media (prefers-reduced-motion: reduce) { .cm-app .startlist .gauge span { transition: none; } }

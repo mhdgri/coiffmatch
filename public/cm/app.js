@@ -954,7 +954,7 @@
   /* ================= Mes rendez-vous ================= */
   function loadMine() {
     var ul = $('mineList'), fl = $('favList');
-    if (!S.me.loggedIn) { ul.innerHTML = loginBox('Connectez-vous pour voir vos rendez-vous.', 'tab=mine'); fl.innerHTML = ''; return; }
+    if (!S.me.loggedIn) { ul.innerHTML = '<li class="cardwrap">' + loginBox('Connectez-vous pour voir vos rendez-vous.', 'tab=mine') + '</li>'; fl.innerHTML = ''; return; }
     ul.innerHTML = '<li class="sub">Chargement…</li>';
     api('me/bookings').then(function (list) {
       var upcoming = list.filter(function (b) { return !b.past; }).reverse();
@@ -1042,7 +1042,7 @@
   /* ================= Messages ================= */
   function loadInbox() {
     var ul = $('threadList');
-    if (!S.me.loggedIn) { ul.innerHTML = loginBox('Connectez-vous pour voir vos messages.', 'tab=inbox'); return; }
+    if (!S.me.loggedIn) { ul.innerHTML = '<li class="cardwrap">' + loginBox('Connectez-vous pour voir vos messages.', 'tab=inbox') + '</li>'; return; }
     ul.innerHTML = '<li class="sub">Chargement…</li>';
     api('threads').then(function (list) {
       list = list.filter(function (t) { return PRO ? t.asPro : !t.asPro; });
@@ -1107,18 +1107,30 @@
   /* « Pour recevoir vos premières demandes » : ce qui reste à faire, tant que ce n'est pas fait. */
   function startList(d, p) {
     var n = (p.photos || []).length;
+    var priced = (p.presta || []).some(function (x) { return +x.price > 0; });
+    var where = p.mode === 'domicile' ? (p.zones || []).length > 0 : !!(p.address || '').trim();
     var items = [
-      [p.status === 'publish', 'Profil validé et en ligne', p.status === 'publish' ? '' : (C.emails ? 'L\'équipe le relit, vous recevrez un e-mail.' : 'L\'équipe le relit, il apparaîtra ici dès qu\'il sera en ligne.')],
+      [(p.hair || []).length > 0, 'Les cheveux que vous maîtrisez', 'Cochez seulement les textures que vous maîtrisez vraiment : c\'est ce qui vous fait apparaître aux bonnes clientes.', 'proedit'],
+      [priced, 'Une prestation avec son prix', 'Une ligne par prestation, avec sa durée et son prix.', 'proedit'],
+      [!!p.hasWeek, 'Vos horaires', 'Indiquez vos créneaux de la semaine et vos jours de fermeture.', 'proedit'],
+      [where, p.mode === 'domicile' ? 'Les communes où vous vous déplacez' : 'L\'adresse du salon', 'Les clientes cherchent d\'abord près de chez elles.', 'proedit'],
+      [(p.bio || '').trim().length >= 60, 'Une présentation de quelques lignes', 'Votre expérience et vos spécialités, en 2 ou 3 phrases.', 'proedit'],
       [n >= 3, 'Au moins 3 photos de vos réalisations', n + ' sur 3 · les clientes choisissent d\'abord sur les photos', 'proedit'],
-      [!!p.verified, 'Badge « Diplôme vérifié »', p.diploma ? 'Diplôme déclaré, en attente de contrôle.' : 'Indiquez votre diplôme dans « Mon profil ».', 'proedit'],
-      [(d.audience && d.audience.views > 0), 'Votre lien partagé', 'Mettez-le dans votre bio Instagram ou WhatsApp.']
+      [!!p.diploma, 'Votre diplôme', p.verified ? '' : 'Indiquez-le pour obtenir le badge « Diplôme vérifié ».', 'proedit'],
+      [p.status === 'publish', 'Profil validé et en ligne', p.status === 'publish' ? '' : (C.emails ? 'L\'équipe le relit, vous recevrez un e-mail.' : 'L\'équipe le relit, il apparaîtra ici dès qu\'il sera en ligne.')]
     ];
-    var left = items.filter(function (x) { return !x[0]; }).length;
-    if (!left) return '';
-    return '<div class="startlist"><h2>Pour recevoir vos premières demandes</h2><p class="sub">' + plural(left, 'étape restante', 'étapes restantes') + '</p><ul>' + items.map(function (x) {
+    var done = items.filter(function (x) { return x[0]; }).length;
+    var pct = Math.round(100 * done / items.length);
+    var shared = d.audience && d.audience.views > 0;
+    if (done === items.length && shared) return '';
+    var list = done === items.length ? '' : '<ul>' + items.map(function (x) {
       return '<li class="' + (x[0] ? 'done' : '') + '"><span class="ck" aria-hidden="true">' + (x[0] ? '✓' : '') + '</span><span><strong>' + esc(x[1]) + '</strong>' + (x[0] || !x[2] ? '' : '<small>' + esc(x[2]) + '</small>') + '</span>' +
         (!x[0] && x[3] ? '<button type="button" class="link" data-tab="' + x[3] + '">Faire</button>' : '') + '</li>';
-    }).join('') + '</ul></div>';
+    }).join('') + '</ul>';
+    return '<div class="startlist"><h2>' + (done === items.length ? 'Votre profil est complet' : 'Pour recevoir vos premières demandes') + '</h2>' +
+      '<div class="gauge" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Profil complété à ' + pct + ' %"><span style="width:' + pct + '%"></span></div>' +
+      '<p class="sub"><strong>Profil complété à ' + pct + ' %</strong>' + (done < items.length ? ' · ' + plural(items.length - done, 'étape restante', 'étapes restantes') : '') + '</p>' + list +
+      (done === items.length && !shared ? '<p class="sub">Dernière étape : partagez votre lien (plus bas) dans votre bio Instagram ou sur WhatsApp.</p>' : '') + '</div>';
   }
   function audienceBlock(d) {
     var a = d.audience;

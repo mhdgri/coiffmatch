@@ -254,7 +254,7 @@ async function proSpace() {
     id: p.id, status: p.status, name: p.name, mode: p.mode, place: p.place, bio: p.bio, hair: p.hair || [], tags: p.tags || [], skills: p.skills || [],
     staff: p.staff || [], diploma: p.diploma, verified: p.verified, refused: p.refused || '', presta: orderPresta(p.presta), week: week(p), off: p.off || [],
     photos: (p.photos || []).map((x) => ({ id: x.id, url: x.url, tag: x.tag || '' })), address: p.address, zones: p.zones || [], travel: p.travel,
-    shareUrl: proUrl(p), ical: await icalUrls(p.id),
+    shareUrl: proUrl(p), ical: await icalUrls(p.id), hasWeek: !!p.week,
   };
   const today = todayKey();
   const all = check(await sb.from('bookings').select('*').eq('pro_id', p.id).order('slot_date').order('slot_hour')) || [];
@@ -354,6 +354,44 @@ async function team(path, method, q, body) {
   const me = await myProfile();
   if (!me || me.role !== 'admin') err("Réservé à l'équipe.", 403, 'cm_team');
   const today = todayKey();
+  if (path === 'months') {
+    // Chiffres du mois (kit de lancement), sans les profils ni les avis d'exemple.
+    const n = 6;
+    const now = new Date(parisDayOf(new Date().toISOString()) + 'T12:00:00Z');
+    const months = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      months.push(d.toISOString().slice(0, 7));
+    }
+    const first = months[0] + '-01';
+    const pros = check(await sb.from('pros').select('id, status, is_example, created_at')) || [];
+    const ex = new Set(pros.filter((p) => p.is_example).map((p) => p.id));
+    const realPros = pros.filter((p) => !p.is_example);
+    const profiles = check(await sb.from('profiles').select('role, created_at')) || [];
+    const bks = (check(await sb.from('bookings').select('pro_id, status, created').gte('created', first + 'T00:00:00Z')) || []).filter((b) => !ex.has(b.pro_id));
+    const revs = (check(await sb.from('reviews').select('pro_id, created, is_example').gte('created', first + 'T00:00:00Z')) || []).filter((r) => !r.is_example && !ex.has(r.pro_id));
+    const mon = (ts) => parisDayOf(ts).slice(0, 7);
+    const rows = months.map((m) => {
+      const end = (t) => mon(t) <= m;
+      const b = bks.filter((x) => mon(x.created) === m);
+      const active = new Set(b.map((x) => x.pro_id)).size;
+      const lost = b.filter((x) => ['cancelled', 'expired', 'refused'].includes(x.status)).length;
+      return {
+        month: m,
+        pros: realPros.filter((p) => p.status === 'publish' && end(p.created_at)).length,
+        prosNew: realPros.filter((p) => p.status === 'publish' && mon(p.created_at) === m).length,
+        clients: profiles.filter((p) => p.role === 'client' && end(p.created_at)).length,
+        clientsNew: profiles.filter((p) => p.role === 'client' && mon(p.created_at) === m).length,
+        asked: b.length,
+        confirmed: b.filter((x) => x.status === 'confirmed').length,
+        active,
+        perActive: active ? Math.round((10 * b.length) / active) / 10 : 0,
+        lostRate: b.length ? Math.round((100 * lost) / b.length) : 0,
+        reviews: revs.filter((r) => mon(r.created) === m).length,
+      };
+    });
+    return { months: rows, current: months[n - 1] };
+  }
   if (path === 'overview') {
     const since = Date.now() - 30 * 864e5, prev = Date.now() - 60 * 864e5;
     const bks = check(await sb.from('bookings').select('*').gte('created', new Date(prev).toISOString()).order('created', { ascending: false })) || [];

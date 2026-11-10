@@ -79,7 +79,7 @@ Supprimez les profils d'exemple :
 delete from public.pros where is_example;
 ```
 
-Les pages légales présentent le site comme un projet de formation sans activité commerciale. Si le site devient une activité (abonnement, paiement en ligne), mettez-les à jour avec votre statut et votre SIRET.
+Les pages légales présentent le site comme un projet personnel sans activité commerciale à ce jour. Si le site devient une activité (abonnement, paiement en ligne), mettez-les à jour avec votre statut et votre SIRET.
 
 ## Lancer sur son ordinateur
 

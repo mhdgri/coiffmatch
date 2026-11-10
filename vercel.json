@@ -1,1 +1,12 @@
-{ "rewrites": [{ "source": "/((?!api/|cm/|assets/|sw\\.js|manifest\\.webmanifest|offline\\.html).*)", "destination": "/index.html" }] }
+{
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/trouver-un-coiffeur/", "destination": "/api/page?kind=search" },
+    { "source": "/guide-des-cheveux/", "destination": "/api/page?kind=guide" },
+    { "source": "/devenir-coiffeur-partenaire/", "destination": "/api/page?kind=partner" },
+    { "source": "/coiffeur/:slug/", "destination": "/api/page?kind=pro&slug=:slug" },
+    { "source": "/coiffeurs/:hair/", "destination": "/api/page?kind=land&hair=:hair" },
+    { "source": "/coiffeurs/:hair/:city/", "destination": "/api/page?kind=land&hair=:hair&city=:city" },
+    { "source": "/((?!api/|_vercel/|cm/|assets/|sw\\.js|manifest\\.webmanifest|offline\\.html).*)", "destination": "/index.html" }
+  ]
+}

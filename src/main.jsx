@@ -6,6 +6,7 @@ import { configured, currentUser, loadBusy, loadPros, loadReviews, myProfile, re
 import { installApi } from './lib/api';
 import { HAIR, SERVICES, SKILLS, LENGTHS, DIPLOMAS, ALL_HOURS, HAIR_QUESTIONS, esc } from './lib/util';
 import * as P from './pages';
+import { inject } from '@vercel/analytics';
 
 const CSS = ['/cm/block-library.css', '/cm/wp-base.css', '/cm/fonts/fonts.css'];
 const FIXES = '/cm/fixes.css';
@@ -36,12 +37,17 @@ function script(src) {
     document.body.appendChild(s);
   });
 }
+/** Crée ou met à jour une balise <meta> (le serveur en a souvent déjà posé une, voir api/page.js). */
 function meta(name, content, prop = false) {
   if (!content) return;
-  const m = document.createElement('meta');
-  m.setAttribute(prop ? 'property' : 'name', name);
+  const attr = prop ? 'property' : 'name';
+  let m = document.head.querySelector(`meta[${attr}="${name}"]`);
+  if (!m) {
+    m = document.createElement('meta');
+    m.setAttribute(attr, name);
+    document.head.appendChild(m);
+  }
   m.content = content;
-  document.head.appendChild(m);
 }
 
 /** Configuration lue par app.js (même contenu que wp_localize_script). */
@@ -361,7 +367,6 @@ async function boot() {
   meta('description', r.desc);
   meta('og:description', r.desc, true);
   meta('og:title', document.title, true);
-  if (r.ogImage) meta('og:image', r.ogImage, true);
   if (r.noindex) meta('robots', 'noindex');
   r.scripts = r.scripts || [];
   root.remove();
@@ -371,4 +376,6 @@ async function boot() {
   // Sans StrictMode : les scripts d'origine ne doivent être chargés qu'une fois.
   createRoot(holder).render(<Page ctx={ctx} r={r} />);
 }
+// Mesure d'audience anonyme, sans cookie (à activer dans Vercel → Analytics).
+if (import.meta.env.PROD) inject();
 boot();

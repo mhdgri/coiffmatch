@@ -53,7 +53,7 @@
   function skeleton(n) { var h = ''; for (var i = 0; i < n; i++) h += '<li class="sk" aria-hidden="true"><div class="sk__lines"><i></i><i></i><i></i></div></li>'; return '<ul class="list">' + h + '</ul>'; }
 
   /* ---------- Squelette ---------- */
-  var VIEWS = [['dash', 'Tableau de bord'], ['pros', 'Coiffeurs'], ['reports', 'Signalements'], ['bookings', 'Rendez-vous'], ['members', 'Membres'], ['contact', 'Messages']];
+  var VIEWS = [['dash', 'Tableau de bord'], ['months', 'Chiffres du mois'], ['pros', 'Coiffeurs'], ['reports', 'Signalements'], ['bookings', 'Rendez-vous'], ['members', 'Membres'], ['contact', 'Messages']];
   root.innerHTML =
     '<header class="top">' +
       '<nav class="tabs" aria-label="Espace équipe">' + VIEWS.map(function (v) {
@@ -80,7 +80,7 @@
     }
     var top = root.getBoundingClientRect().top + window.scrollY - 90;
     if (window.scrollY > top) window.scrollTo(0, Math.max(0, top));
-    ({ dash: loadDash, pros: loadPros, reports: loadReports, bookings: loadBookings, members: loadMembers, contact: loadContact })[v]();
+    ({ dash: loadDash, pros: loadPros, reports: loadReports, bookings: loadBookings, members: loadMembers, contact: loadContact, months: loadMonths })[v]();
   }
   root.addEventListener('click', function (e) {
     var b = e.target.closest('[data-tab]');
@@ -286,6 +286,50 @@
   }
 
   /* ---------- Membres ---------- */
+  /* ---------- Chiffres du mois (kit de lancement) ---------- */
+  var MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  function monthLabel(m) { return MONTHS[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4); }
+  var GOAL = 30;
+  var ROWS = [
+    ['pros', 'Coiffeurs en ligne (total)', '10 au lancement', function (x) { return x.pros + (x.prosNew ? ' (+' + x.prosNew + ')' : ''); }],
+    ['clients', 'Clientes inscrites (total)', '30 au lancement', function (x) { return x.clients + (x.clientsNew ? ' (+' + x.clientsNew + ')' : ''); }],
+    ['asked', 'Rendez-vous demandés', GOAL + ' par mois', function (x) { return String(x.asked); }],
+    ['confirmed', 'Rendez-vous confirmés', '25 par mois', function (x) { return String(x.confirmed); }],
+    ['active', 'Coiffeurs actifs (au moins 1 demande)', '', function (x) { return String(x.active); }],
+    ['perActive', 'Rendez-vous par coiffeur actif', '2 ou plus', function (x) { return String(x.perActive).replace('.', ','); }],
+    ['lostRate', 'Annulés, refusés ou sans réponse', 'moins de 20 %', function (x) { return x.asked ? x.lostRate + ' %' : '–'; }],
+    ['reviews', 'Avis laissés', '10 par mois', function (x) { return String(x.reviews); }]
+  ];
+  function loadMonths() {
+    var box = $('v-months');
+    var head = '<div class="vhead"><h1>Chiffres du mois</h1></div><p class="sub small">Les indicateurs du kit de lancement, calculés automatiquement sur les 6 derniers mois. Les profils et avis d\'exemple ne sont pas comptés.</p>';
+    if (!box.innerHTML) box.innerHTML = head + skeleton(3);
+    api('months').then(function (d) {
+      var cur = d.months[d.months.length - 1];
+      d.months = d.months.slice().reverse(); // le mois en cours d'abord
+      var ok = cur.asked >= GOAL;
+      var html = head +
+        '<div class="mgoal' + (ok ? ' mgoal--ok' : '') + '"><b>' + cur.asked + ' / ' + GOAL + '</b><span>rendez-vous demandés en ' + esc(monthLabel(cur.month)) + '. ' +
+          (ok ? 'Objectif atteint : vous pouvez passer à la phase suivante.' : 'Objectif du lancement : ' + GOAL + ' par mois. Encore ' + (GOAL - cur.asked) + '.') + '</span></div>' +
+        '<div class="mtbl-wrap"><table class="mtbl"><thead><tr><th scope="col">Indicateur</th><th scope="col">Objectif</th>' +
+          d.months.map(function (x) { return '<th scope="col"' + (x.month === cur.month ? ' class="mtbl__now"' : '') + '>' + esc(monthLabel(x.month)) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+          ROWS.map(function (r) {
+            return '<tr><th scope="row">' + esc(r[1]) + '</th><td class="mtbl__goal">' + esc(r[2]) + '</td>' + d.months.map(function (x) { return '<td' + (x.month === cur.month ? ' class="mtbl__now"' : '') + '>' + esc(r[3](x)) + '</td>'; }).join('') + '</tr>';
+          }).join('') +
+        '</tbody></table></div>' +
+        '<p class="sub small">À noter à la main dans le kit de lancement : coiffeurs contactés et abonnés Instagram. Entre parenthèses : les nouveaux du mois.</p>' +
+        '<p><button type="button" class="cta-sm" id="cm-mcopy">Copier le tableau</button></p>';
+      box.innerHTML = html;
+      $('mcopy').onclick = function () {
+        var lines = [['Indicateur', 'Objectif'].concat(d.months.map(function (x) { return monthLabel(x.month); })).join('\t')].concat(ROWS.map(function (r) {
+          return [r[1], r[2]].concat(d.months.map(function (x) { return r[3](x); })).join('\t');
+        }));
+        var txt = lines.join('\n');
+        (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { toast('Tableau copié : collez-le dans votre kit de lancement.'); }).catch(function () { toast('Copie impossible sur ce navigateur.'); });
+      };
+    }).catch(function (e) { box.innerHTML = head + '<p class="empty">' + esc(e.message) + '</p>'; });
+  }
+
   function loadContact() {
     var box = $('v-contact');
     box.innerHTML = '<div class="vhead"><h1>Messages</h1></div><p class="sub small">Messages envoyés depuis la page Contact. Répondez par e-mail à l\'adresse indiquée.</p>' + skeleton(3);
