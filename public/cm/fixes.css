@@ -130,3 +130,28 @@
 .cm-app .rq-no[data-sure="1"], .cm-app .rq-no[data-sure="1"]:hover { background: #8A2E22; border-color: #8A2E22; color: #FFF; }
 /* L'animation d'entrée gardait un transform sur la vue (fill: both), ce qui empêchait les barres « fixed » de coller à l'écran. */
 @media (prefers-reduced-motion: no-preference) { .cm-app .view:not([hidden]) { animation-fill-mode: backwards; } }
+
+/* ---------- Accueil sur téléphone : retouches ---------- */
+/* Questions fréquentes : flèche dans la marge, pas collée au bord de l'écran */
+.faq summary { list-style: none; display: flex; align-items: flex-start; gap: 12px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::before { content: ""; flex: none; width: 9px; height: 9px; margin-top: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .15s ease; }
+.faq details[open] > summary::before { transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) { .faq summary::before { transition: none; } }
+
+@media (max-width: 759px) {
+  /* Les cinq types sont déjà dans le formulaire : la bande en double est retirée sur téléphone */
+  .hero3__types { display: none; }
+  .hero3 { padding-bottom: 28px; }
+  /* Pastilles « Vos cheveux » : toutes visibles, sur deux lignes */
+  .hero3__chips { flex-wrap: wrap !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; gap: 8px; }
+  .hero3__chip span { min-height: 40px; padding: 0 14px; font-size: 15px; }
+  /* « Reprendre où vous en étiez » : titre au-dessus, cartes qui défilent jusqu'au bord */
+  .recent-home__inner { flex-direction: column; align-items: stretch; gap: 10px; padding-top: 14px; padding-bottom: 14px; }
+  .recent-home__row { margin: 0 -20px; padding: 0 20px 2px; scrollbar-width: none; scroll-padding: 20px; }
+  .recent-home__row::-webkit-scrollbar { display: none; }
+  /* Cartes textures : défilent jusqu'au bord, sans barre */
+  .textures__list { margin: 0 -20px; padding: 0 20px 6px; scroll-padding: 20px; scrollbar-width: none; }
+  .textures__list::-webkit-scrollbar { display: none; }
+  .textures__list li { flex-basis: 70%; }
+}

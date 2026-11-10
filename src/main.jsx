@@ -10,6 +10,8 @@ import { inject } from '@vercel/analytics';
 
 const CSS = ['/cm/block-library.css', '/cm/wp-base.css', '/cm/fonts/fonts.css'];
 const FIXES = '/cm/fixes.css';
+/* global __CM_BUILD__ */
+const ver = (u) => (u.startsWith('/cm/') ? u + (u.includes('?') ? '&' : '?') + 'v=' + __CM_BUILD__ : u);
 const pathname = location.pathname.replace(/\/+$/, '') + '/';
 const params = new URLSearchParams(location.search);
 const go = (url) => {
@@ -22,7 +24,7 @@ function css(list) {
   return Promise.all(list.map((href) => new Promise((ok) => {
     const l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = href;
+    l.href = ver(href);
     l.onload = ok;
     l.onerror = ok;
     document.head.appendChild(l);
@@ -31,7 +33,7 @@ function css(list) {
 function script(src) {
   return new Promise((ok) => {
     const s = document.createElement('script');
-    s.src = src;
+    s.src = ver(src);
     s.onload = ok;
     s.onerror = ok;
     document.body.appendChild(s);

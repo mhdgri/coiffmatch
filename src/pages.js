@@ -117,7 +117,7 @@ export function home(d) {
       `<a class="btn btn--ghost" href="${APP}?sort=soon">Tous les coiffeurs</a></div><ul class="soon__list">` +
       soon.slice(0, 4).map((x) => {
         const hl = x.hair.map((h) => lower(HAIR[h] || h)).join(', ');
-        const meta = (hl.charAt(0).toUpperCase() + hl.slice(1)) + ' · ' + (x.mode === 'domicile' ? 'à domicile, ' : '') + x.place + (x.rating.n ? ' · ★ ' + x.rating.avg.toFixed(1) : '');
+        const meta = (hl.charAt(0).toUpperCase() + hl.slice(1)) + ' · ' + (x.mode === 'domicile' ? 'à domicile, ' : '') + x.place + (x.rating.n ? ' · ★ ' + num1(x.rating.avg) : '');
         const img = x.photos.length ? `<img class="soon__ph" src="${e(x.photos[0].url)}" alt="">` : `<img class="soon__ph" src="${x.art[0]}" alt="" loading="lazy">`;
         return `<li><a href="${APP}?pro=${x.id}">${img}<span class="soon__who"><strong>${e(x.name)}</strong><span>${e(meta)}</span></span><span class="soon__slot">${e(x.next.label)}</span></a></li>`;
       }).join('') + '</ul></div></section>';
@@ -135,7 +135,7 @@ export function home(d) {
       return w.length > 26 ? w.slice(0, 26).join(' ') + '…' : t.trim();
     };
     html += '<section class="section voices" aria-labelledby="voices-title"><div class="wrap"><h2 id="voices-title" class="voices__title">Les coiffeurs, avec leurs mots</h2><ul class="voices__list">' +
-      voices.map(({ p, d: x }) => `<li><a href="${e(x.url)}"><blockquote>« ${e(trim(p.bio))} »</blockquote><span class="voices__who"><img src="${e(x.photos.length ? x.photos[0].url : x.art[0])}" alt="" loading="lazy"><span><strong>${e(x.name)}</strong><small>${e((x.mode === 'domicile' ? 'À domicile · ' : 'Salon · ') + x.place)}</small></span></span></a></li>`).join('') +
+      voices.map(({ p, d: x }) => `<li><a href="${e(x.url)}"><blockquote>« ${e(trim(p.bio))} »</blockquote><span class="voices__who"><img src="${e(x.photos.length ? x.photos[0].url : x.art[0])}" data-fb="${e(x.art[0])}" alt="" loading="lazy"><span><strong>${e(x.name)}</strong><small>${e((x.mode === 'domicile' ? 'À domicile · ' : 'Salon · ') + x.place)}</small></span></span></a></li>`).join('') +
       '</ul></div></section>';
   }
   const c = s.cancel_hours;
@@ -239,7 +239,7 @@ export function pro(d) {
     (x.verified ? '<span class="cm-pub-badge cm-pub-badge--ok">✓ Diplôme vérifié</span>' : '') + (x.example ? '<span class="cm-pub-badge">Profil d\'exemple</span>' : '') +
     x.hair.map((h) => `<span class="cm-pub-badge">${e(HAIR[h])}</span>`).join('') + '</p></div></header><div class="cm-pub-wrap cm-pub-grid"><div class="cm-pub-main"><section class="cm-pub-gallery" aria-label="Réalisations" data-lb>';
   if (x.photos.length) {
-    html += x.photos.slice(0, 6).map((ph, i) => `<figure class="cm-pub-ph${i === 0 ? ' cm-pub-ph--big' : ''}"><img src="${e(ph.url)}" alt="Réalisation de ${e(x.name)}" loading="${i ? 'lazy' : 'eager'}">${ph.tag ? `<figcaption>${ph.tag === 'avant' ? 'Avant' : 'Après'}</figcaption>` : ''}</figure>`).join('');
+    html += x.photos.slice(0, 6).map((ph, i) => `<figure class="cm-pub-ph${i === 0 ? ' cm-pub-ph--big' : ''}"><img src="${e(ph.url)}" data-fb="${x.art[i % x.art.length]}" alt="Réalisation de ${e(x.name)}" loading="${i ? 'lazy' : 'eager'}">${ph.tag ? `<figcaption>${ph.tag === 'avant' ? 'Avant' : 'Après'}</figcaption>` : ''}</figure>`).join('');
   } else {
     html += x.art.slice(0, 3).map((a, i) => `<figure class="cm-pub-ph${i === 0 ? ' cm-pub-ph--big' : ''}"><img src="${a}" alt="" loading="lazy"></figure>`).join('') + '<p class="cm-pub-note">Les photos des réalisations arrivent bientôt.</p>';
   }

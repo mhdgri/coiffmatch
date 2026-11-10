@@ -76,3 +76,11 @@
   window.addEventListener('submit', function (e) { if (!e.defaultPrevented) start(); });
   window.addEventListener('pageshow', done);
 })();
+
+/* Photo introuvable : on affiche le motif de texture à la place d'une image cassée. */
+document.addEventListener('error', function (e) {
+  var img = e.target;
+  if (!img || img.tagName !== 'IMG' || !img.getAttribute('data-fb') || img.src.indexOf(img.getAttribute('data-fb')) !== -1) return;
+  img.src = img.getAttribute('data-fb');
+}, true);
+document.querySelectorAll('img[data-fb]').forEach(function (img) { if (img.complete && !img.naturalWidth) img.src = img.getAttribute('data-fb'); });
